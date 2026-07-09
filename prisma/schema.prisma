@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(CUSTOMER)
+  orders    Order[]
+  adminLogs AdminLog[] @relation("AdminLogs")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  price       Decimal     @db.Decimal(10, 2)
+  stock       Int         @default(0)
+  imageUrl    String?
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  media       Media[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  totalAmount Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  productId String
+  url       String
+  type      MediaType @default(IMAGE)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  createdAt DateTime @default(now())
+  admin     User     @relation("AdminLogs", fields: [adminId], references: [id])
+}
