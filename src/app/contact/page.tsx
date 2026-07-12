@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { ContactForm } from "@/components/forms/contact-form";
 import { ButtonLink } from "@/components/ui/button";
+import { company } from "@/lib/company";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -37,11 +39,11 @@ export default function ContactPage() {
             <ul className="mt-5 grid gap-4 text-sm text-slate-600">
               <li className="flex gap-3">
                 <Phone className="h-5 w-5 text-orange-500" />
-                Phone: +254 700 000 000
+                Phone: {company.phoneDisplay}
               </li>
               <li className="flex gap-3">
                 <Mail className="h-5 w-5 text-orange-500" />
-                Email: sales@cetertechnology.com
+                Email: {company.email}
               </li>
               <li className="flex gap-3">
                 <MapPin className="h-5 w-5 text-orange-500" />
@@ -49,7 +51,7 @@ export default function ContactPage() {
               </li>
             </ul>
             <ButtonLink
-              href="https://wa.me/254700000000"
+              href={whatsappUrl(`Hello ${company.tradingName}, I need assistance.`)}
               variant="secondary"
               className="mt-6 w-full"
             >

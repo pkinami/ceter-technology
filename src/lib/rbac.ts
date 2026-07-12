@@ -95,6 +95,29 @@ export function permissionCode(module: PermissionModule, action: PermissionActio
 }
 
 export const ensureDefaultRbac = cache(async () => {
+  const expectedRoleSlugs = roleCatalog.map((role) => role.slug);
+  const [permissionCount, systemRoleCount, legacyAdminWithoutRole] = await Promise.all([
+    prisma.permission.count({
+      where: { code: { in: permissionCatalog.map((item) => codeFor(item.module, item.action)) } },
+    }),
+    prisma.userRole.count({ where: { slug: { in: expectedRoleSlugs }, isSystem: true } }),
+    prisma.user.findFirst({
+      where: {
+        role: "ADMIN",
+        roleAssignments: { none: {} },
+      },
+      select: { id: true },
+    }),
+  ]);
+
+  if (
+    permissionCount === permissionCatalog.length &&
+    systemRoleCount === roleCatalog.length &&
+    !legacyAdminWithoutRole
+  ) {
+    return;
+  }
+
   for (const permission of permissionCatalog) {
     await prisma.permission.upsert({
       where: { module_action: { module: permission.module, action: permission.action } },
@@ -175,12 +198,13 @@ export const ensureDefaultRbac = cache(async () => {
 });
 
 export const getCurrentUserWithAccess = cache(async () => {
-  await ensureDefaultRbac();
   const user = await getCurrentUser();
 
   if (!user) {
     return null;
   }
+
+  await ensureDefaultRbac();
 
   const assignments = await prisma.userRoleAssignment.findMany({
     where: { userId: user.id },

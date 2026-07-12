@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { company } from "@/lib/company";
 import { formatCurrency } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 import { useCartStore } from "@/store/cart-store";
@@ -10,7 +11,7 @@ export function CheckoutSummary() {
   const total = subtotal();
   const itemCount = items.reduce((count, item) => count + item.quantity, 0);
   const whatsappMessage = [
-    "Hello CETER Technology,",
+    `Hello ${company.tradingName},`,
     "",
     "I would like help completing this order:",
     ...items.map((item) => `${item.name} x ${item.quantity}`),

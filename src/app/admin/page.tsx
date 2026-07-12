@@ -47,15 +47,25 @@ export default async function AdminPage() {
     prisma.order.count({ where: { orderStatus: { in: ["PENDING", "PROCESSING"] } } }),
     prisma.quoteRequest.count({ where: { status: "NEW" } }),
     prisma.order.findMany({
-      include: {
-        user: true,
-        items: { include: { product: true } },
+      select: {
+        id: true,
+        customerName: true,
+        orderNumber: true,
+        totalAmount: true,
+        orderStatus: true,
+        createdAt: true,
+        _count: { select: { items: true } },
       },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
     prisma.adminLog.findMany({
-      include: { admin: true },
+      select: {
+        id: true,
+        action: true,
+        timestamp: true,
+        admin: { select: { name: true } },
+      },
       orderBy: { timestamp: "desc" },
       take: 5,
     }),
@@ -212,7 +222,7 @@ export default async function AdminPage() {
                       {order.orderNumber}
                     </td>
                     <td className="py-4 pr-4 text-slate-600">
-                      {order.items.length} item{order.items.length === 1 ? "" : "s"}
+                      {order._count.items} item{order._count.items === 1 ? "" : "s"}
                     </td>
                     <td className="py-4 pr-4 font-bold text-slate-950">
                       {money(order.totalAmount)}

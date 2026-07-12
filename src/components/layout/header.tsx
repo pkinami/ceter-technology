@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
+import { company } from "@/lib/company";
 import { marketplaceDepartments } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -27,12 +28,12 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
       <div className="bg-slate-950 text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="CETER Technology home">
+          <Link href="/" className="flex shrink-0 items-center gap-3" aria-label={`${company.tradingName} home`}>
             <span className="grid h-11 w-11 place-items-center rounded-md bg-orange-500 text-sm font-black text-white">
               CT
             </span>
             <span className="leading-tight">
-              <span className="block text-base font-black tracking-wide">CETER TECHNOLOGY</span>
+              <span className="block text-base font-black tracking-wide">{company.tradingName}</span>
               <span className="block text-xs font-semibold text-slate-300">Technology marketplace</span>
             </span>
           </Link>

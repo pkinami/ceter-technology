@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, Minus, Plus, ShieldCheck, Trash2, Truck } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { company } from "@/lib/company";
 import { formatCurrency } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 import { useCartStore } from "@/store/cart-store";
@@ -14,7 +15,7 @@ export function CartView() {
   const total = subtotal();
   const totalItems = items.reduce((count, item) => count + item.quantity, 0);
   const whatsappMessage = [
-    "Hello CETER Technology,",
+    `Hello ${company.tradingName},`,
     "",
     "I would like to order or request a quote for:",
     ...items.map((item) => `${item.quantity} x ${item.name}`),

@@ -27,19 +27,38 @@ const productBadges = [
   { value: "PROMOTION", label: "Promotion" },
 ];
 
-export default async function AdminProductsPage() {
+const pageSize = 24;
+
+type Props = {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+};
+
+function paginationHref(page: number) {
+  return `/admin/products?page=${page}`;
+}
+
+export default async function AdminProductsPage({ searchParams }: Props) {
   await requirePermission("PRODUCTS", "VIEW");
 
-  const [categories, products] = await Promise.all([
+  const requestedPage = Number((await searchParams).page ?? "1");
+  const requestedValidPage = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const [categories, totalProducts] = await Promise.all([
     prisma.category.findMany({
       include: { parent: true },
       orderBy: [{ parentId: "asc" }, { name: "asc" }],
     }),
-    prisma.product.findMany({
-      include: { category: true, media: true },
-      orderBy: { updatedAt: "desc" },
-    }),
+    prisma.product.count(),
   ]);
+  const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
+  const currentPage = Math.min(requestedValidPage, totalPages);
+  const products = await prisma.product.findMany({
+    include: { category: true },
+    orderBy: { updatedAt: "desc" },
+    skip: (currentPage - 1) * pageSize,
+    take: pageSize,
+  });
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -180,8 +199,39 @@ export default async function AdminProductsPage() {
             <div>
               <h2 className="text-xl font-black text-slate-950">Product list</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Image, name, category, price, stock, status, edit, and delete controls.
+                Image, name, category, price, stock, status, edit, and delete controls. Showing page {currentPage} of {totalPages}.
               </p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              {totalProducts === 0
+                ? "No products in the catalogue."
+                : `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalProducts)} of ${totalProducts} products.`}
+            </span>
+            <div className="flex gap-2">
+              <Link
+                href={paginationHref(Math.max(1, currentPage - 1))}
+                aria-disabled={currentPage <= 1}
+                className={`inline-flex min-h-10 items-center justify-center rounded-md border px-3 py-2 font-bold ${
+                  currentPage <= 1
+                    ? "pointer-events-none border-slate-200 text-slate-400"
+                    : "border-slate-300 text-slate-900 hover:bg-white"
+                }`}
+              >
+                Previous
+              </Link>
+              <Link
+                href={paginationHref(Math.min(totalPages, currentPage + 1))}
+                aria-disabled={currentPage >= totalPages}
+                className={`inline-flex min-h-10 items-center justify-center rounded-md border px-3 py-2 font-bold ${
+                  currentPage >= totalPages
+                    ? "pointer-events-none border-slate-200 text-slate-400"
+                    : "border-slate-300 text-slate-900 hover:bg-white"
+                }`}
+              >
+                Next
+              </Link>
             </div>
           </div>
 

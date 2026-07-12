@@ -1,8 +1,9 @@
 import type { Product } from "@/types";
+import { company } from "@/lib/company";
 import { formatCurrency } from "@/lib/utils";
 
 export const ceterWhatsAppNumber =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "254700000000";
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? company.whatsappNumber;
 
 export function whatsappUrl(message: string) {
   return `https://wa.me/${ceterWhatsAppNumber}?text=${encodeURIComponent(message)}`;
@@ -10,7 +11,7 @@ export function whatsappUrl(message: string) {
 
 export function productOrderMessage(product: Product) {
   return [
-    "Hello CETER Technology,",
+    `Hello ${company.tradingName},`,
     "",
     "I would like to order:",
     product.name,

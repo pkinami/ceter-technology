@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { AtSign, Globe, Link as LinkIcon, Mail, MapPin, Phone } from "lucide-react";
+import { company } from "@/lib/company";
 
 const socialLinks = [
-  { href: "/", label: "CETER Technology website", icon: Globe },
-  { href: "mailto:sales@cetertechnology.com", label: "Email CETER Technology", icon: AtSign },
-  { href: "/contact", label: "Contact CETER Technology", icon: LinkIcon },
+  { href: "/", label: `${company.tradingName} website`, icon: Globe },
+  { href: `mailto:${company.email}`, label: `Email ${company.tradingName}`, icon: AtSign },
+  { href: "/contact", label: `Contact ${company.tradingName}`, icon: LinkIcon },
 ];
 
 export function Footer() {
@@ -12,7 +13,7 @@ export function Footer() {
     <footer className="bg-slate-950 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <div className="text-lg font-black tracking-wide">CETER TECHNOLOGY</div>
+          <div className="text-lg font-black tracking-wide">{company.legalName}</div>
           <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
             Reliable printers, accessories, office equipment, and IT support
             services for homes, businesses, and organizations.
@@ -57,11 +58,11 @@ export function Footer() {
           <ul className="mt-4 grid gap-4 text-sm text-slate-300">
             <li className="flex gap-3">
               <Phone className="h-4 w-4 text-orange-500" />
-              Phone: +254 700 000 000
+              Phone: {company.phoneDisplay}
             </li>
             <li className="flex gap-3">
               <Mail className="h-4 w-4 text-orange-500" />
-              Email: sales@cetertechnology.com
+              Email: {company.email}
             </li>
             <li className="flex gap-3">
               <MapPin className="h-4 w-4 text-orange-500" />
@@ -71,7 +72,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-5 text-center text-xs text-slate-400">
-        © 2026 CETER Technology. All rights reserved.
+        © 2026 {company.legalName}. All rights reserved.
       </div>
     </footer>
   );
