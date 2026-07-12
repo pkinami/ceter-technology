@@ -56,6 +56,14 @@ const automationJobTypes = [
 const priceRuleScopes = ["GLOBAL", "CATEGORY", "BRAND", "PRODUCT"] as const;
 const quoteStatuses = ["NEW", "CONTACTED", "QUOTED", "CLOSED"] as const;
 
+type BulkProductSnapshot = {
+  id: string;
+  name: string;
+  price: { toString(): string };
+  stock: number;
+  status: string;
+};
+
 function hasNoJsonObjectEntries(value: unknown) {
   return !value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length === 0;
 }
@@ -1420,7 +1428,7 @@ export async function bulkUpdateProducts(formData: FormData) {
     throw new Error("Select at least one product.");
   }
 
-  const previousProducts = await prisma.product.findMany({
+  const previousProducts: BulkProductSnapshot[] = await prisma.product.findMany({
     where: { id: { in: productIds } },
     select: { id: true, name: true, price: true, stock: true, status: true },
   });
