@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -35,15 +34,17 @@ export const getCurrentUser = cache(async () => {
 });
 
 export async function requireAdmin() {
-  const user = await getCurrentUser();
+  const { requireAnyPermission } = await import("@/lib/rbac");
 
-  if (!user) {
-    redirect("/");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  return user;
+  return requireAnyPermission(
+    ["PRODUCTS", "VIEW"],
+    ["ORDERS", "VIEW"],
+    ["CUSTOMERS", "VIEW"],
+    ["REPORTS", "VIEW"],
+    ["SETTINGS", "MANAGE"],
+    ["USERS", "VIEW"],
+    ["ROLES", "VIEW"],
+    ["PERMISSIONS", "VIEW"],
+    ["MARKETING", "MANAGE"],
+  );
 }

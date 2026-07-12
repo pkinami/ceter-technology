@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { PackageCheck } from "lucide-react";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -56,7 +57,9 @@ export default async function OrdersPage() {
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="font-black text-slate-950">Order {order.id}</h2>
+                  <h2 className="font-black text-slate-950">
+                    Order {order.orderNumber}
+                  </h2>
                   <p className="mt-1 text-sm text-slate-500">
                     {order.createdAt.toLocaleDateString("en-KE", {
                       dateStyle: "medium",
@@ -67,9 +70,14 @@ export default async function OrdersPage() {
                   <p className="font-black text-slate-950">
                     {money(order.totalAmount)}
                   </p>
-                  <p className="mt-1 rounded-md bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
-                    {order.status}
-                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2 sm:justify-end">
+                    <span className="rounded-md bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
+                      Payment: {order.paymentStatus}
+                    </span>
+                    <span className="rounded-md bg-orange-50 px-3 py-1 text-sm font-bold text-orange-700">
+                      Delivery: {order.orderStatus}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="mt-5 divide-y divide-slate-200">
@@ -84,6 +92,12 @@ export default async function OrdersPage() {
                   </div>
                 ))}
               </div>
+              <Link
+                href={`/order-confirmation/${order.id}`}
+                className="mt-5 inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 hover:border-orange-300 hover:bg-orange-50"
+              >
+                View details
+              </Link>
             </article>
           ))}
           {orders.length === 0 ? (

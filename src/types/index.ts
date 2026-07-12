@@ -1,29 +1,23 @@
-export type ProductCategory =
-  | "Printers"
-  | "Ink & Toners"
-  | "Printer Accessories"
-  | "Office Equipment"
-  | "IT Support Services";
-
 export type Product = {
   id: string;
   slug: string;
   name: string;
+  brand: string;
   description: string;
-  longDescription: string;
   price: number;
-  category: ProductCategory;
+  discountPrice: number | null;
+  category: string;
   subcategory: string;
-  imageTone: "blue" | "orange" | "slate" | "cyan" | "green" | "violet";
+  categoryPath: string;
+  imageUrl: string | null;
+  images: string[];
   stock: number;
-  availability: "In stock" | "Limited stock" | "Pre-order";
+  lowStockThreshold: number;
+  availability: "In stock" | "Limited stock" | "Out of stock";
+  status: "ACTIVE" | "OUT_OF_STOCK" | "DRAFT" | "NEEDS_ATTENTION";
+  badges: ("FEATURED" | "NEW_ARRIVAL" | "BEST_SELLER" | "PROMOTION")[];
   specs: Record<string, string>;
-  reviews: {
-    name: string;
-    rating: number;
-    comment: string;
-  }[];
-  featured?: boolean;
+  createdAt: string;
 };
 
 export type CartItem = Product & {

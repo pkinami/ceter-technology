@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { AtSign, Globe, Link as LinkIcon, Mail, MapPin, Phone } from "lucide-react";
 
+const socialLinks = [
+  { href: "/", label: "CETER Technology website", icon: Globe },
+  { href: "mailto:sales@cetertechnology.com", label: "Email CETER Technology", icon: AtSign },
+  { href: "/contact", label: "Contact CETER Technology", icon: LinkIcon },
+];
+
 export function Footer() {
   return (
     <footer className="bg-slate-950 text-white">
@@ -12,12 +18,12 @@ export function Footer() {
             services for homes, businesses, and organizations.
           </p>
           <div className="mt-5 flex gap-3">
-            {[Globe, AtSign, LinkIcon].map((Icon, index) => (
+            {socialLinks.map(({ href, label, icon: Icon }) => (
               <a
-                href="#"
-                key={index}
+                href={href}
+                key={href}
                 className="grid h-10 w-10 place-items-center rounded-md bg-white/10 text-white hover:bg-orange-500"
-                aria-label="Social media"
+                aria-label={label}
               >
                 <Icon className="h-4 w-4" />
               </a>
@@ -27,7 +33,7 @@ export function Footer() {
         <div>
           <h3 className="font-bold">Quick links</h3>
           <ul className="mt-4 grid gap-3 text-sm text-slate-300">
-            {["Products", "Services", "About", "Contact", "Cart"].map((item) => (
+            {["Products", "Services", "About", "Contact", "Cart", "Admin"].map((item) => (
               <li key={item}>
                 <Link href={`/${item.toLowerCase()}`} className="hover:text-white">
                   {item}

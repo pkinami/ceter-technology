@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "node prisma/seed.mjs",
+    "setup:admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -14,6 +16,7 @@
     "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1",
+    "cloudinary": "latest",
     "clsx": "^2.1.1",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
@@ -22,7 +25,9 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.81.0",
+    "serpapi": "latest",
     "tailwind-merge": "^3.6.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },

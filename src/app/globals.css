@@ -16,9 +16,93 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scroll-padding-top: 9rem;
+}
+
+button,
+a,
+summary,
+select,
+input[type="button"],
+input[type="checkbox"],
+input[type="file"],
+input[type="radio"],
+input[type="reset"],
+input[type="submit"],
+[role="button"],
+[data-clickable="true"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+a,
+button,
+summary,
+[data-clickable="true"] {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 3px rgb(251 146 60 / 18%);
+  outline: none;
+}
+
+@keyframes admin-skeleton {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.admin-skeleton {
+  animation: admin-skeleton 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, #f8fafc 25%, #e2e8f0 37%, #f8fafc 63%);
+  background-size: 400% 100%;
 }
 
 ::selection {
   background: #fed7aa;
   color: #0f172a;
+}
+
+img {
+  background-color: #f8fafc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

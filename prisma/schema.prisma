@@ -6,68 +6,198 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  CUSTOMER
-}
-
-enum OrderStatus {
-  PENDING
-  PAID
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum MediaType {
-  IMAGE
-  VIDEO
-}
-
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      Role     @default(CUSTOMER)
-  orders    Order[]
-  adminLogs AdminLog[] @relation("AdminLogs")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String               @id @default(cuid())
+  name            String
+  email           String               @unique
+  role            Role                 @default(CUSTOMER)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  adminLogs       AdminLog[]           @relation("AdminLogs")
+  events          AnalyticsEvent[]
+  auditLogs       AuditLog[]           @relation("AuditLogActor")
+  imports         ImportHistory[]      @relation("ImportHistoryAdmin")
+  orders          Order[]
+  views           ProductView[]
+  roleAssignments UserRoleAssignment[] @relation("UserRoleAssignments")
+}
+
+model UserRole {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  slug        String               @unique
+  description String?
+  isSystem    Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  permissions RolePermission[]
+  assignments UserRoleAssignment[] @relation("RoleAssignments")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  module      PermissionModule
+  action      PermissionAction
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+
+  @@unique([module, action])
+  @@index([module])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         UserRole   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRoleAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  roleId     String
+  assignedBy String?
+  createdAt  DateTime @default(now())
+  role       UserRole @relation("RoleAssignments", fields: [roleId], references: [id], onDelete: Cascade)
+  user       User     @relation("UserRoleAssignments", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique @default(cuid())
+  description String?
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
 }
 
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  description String
-  price       Decimal     @db.Decimal(10, 2)
-  stock       Int         @default(0)
-  imageUrl    String?
-  categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  media       Media[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                String                     @id @default(cuid())
+  name              String
+  slug              String                     @unique @default(cuid())
+  description       String
+  brand             String                     @default("")
+  price             Decimal                    @db.Decimal(10, 2)
+  discountPrice     Decimal?                   @db.Decimal(10, 2)
+  stock             Int                        @default(0)
+  lowStockThreshold Int                        @default(5)
+  status            ProductStatus              @default(DRAFT)
+  badges            ProductBadge[]             @default([])
+  imageUrl          String?
+  specifications    Json?
+  categoryId        String
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  imageSources      ImageSource[]
+  inventoryLogs     InventoryLog[]
+  marketPriceIndex  MarketPriceIndex?
+  campaigns         MarketingCampaignProduct[]
+  media             Media[]
+  orderItems        OrderItem[]
+  priceHistory      PriceHistory[]
+  category          Category                   @relation(fields: [categoryId], references: [id])
+  discoveries       ProductDiscovery[]
+  candidateMatches  ProductMatch[]             @relation("CandidateProductMatches")
+  primaryMatches    ProductMatch[]             @relation("PrimaryProductMatches")
+  qualityChecks     ProductQualityCheck[]
+  sourceRecords     ProductSource[]
+  views             ProductView[]
+  quoteRequests     QuoteRequest[]
+  stockMovements    StockMovement[]
+  supplierProducts  SupplierProduct[]
+
+  @@index([slug])
+  @@index([brand])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([brand, status])
+  @@index([categoryId, status])
+  @@index([status])
+  @@index([stock])
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  totalAmount Decimal     @db.Decimal(10, 2)
-  status      OrderStatus @default(PENDING)
-  user        User        @relation(fields: [userId], references: [id])
-  items       OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id               String               @id @default(cuid())
+  userId           String?
+  orderNumber      String               @unique
+  totalAmount      Decimal              @db.Decimal(10, 2)
+  paymentStatus    PaymentStatus        @default(PENDING)
+  orderStatus      OrderStatus          @default(PENDING)
+  paymentMethod    String
+  customerName     String
+  customerEmail    String
+  customerPhone    String
+  deliveryAddress  String
+  city             String
+  country          String
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deliveryInfo     Json?
+  deliveryProvider String?
+  deliveryStatus   DeliveryStatus       @default(PENDING)
+  internalNotes    String?
+  trackingNumber   String               @unique
+  user             User?                @relation(fields: [userId], references: [id])
+  issues           OrderIssue[]
+  items            OrderItem[]
+  statusHistory    OrderStatusHistory[]
+  payments         Payment[]
+  stockMovements   StockMovement[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([trackingNumber])
+  @@index([customerName])
+  @@index([customerEmail])
+  @@index([customerPhone])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([deliveryStatus])
+  @@index([createdAt])
+}
+
+model OrderStatusHistory {
+  id             String       @id @default(cuid())
+  orderId        String
+  previousStatus OrderStatus?
+  newStatus      OrderStatus
+  note           String?
+  changedBy      String?
+  createdAt      DateTime     @default(now())
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model OrderIssue {
+  id        String   @id @default(cuid())
+  orderId   String
+  title     String
+  status    String   @default("OPEN")
+  note      String
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -80,19 +210,855 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
 }
 
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  transactionId String?
+  paymentMethod String
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([transactionId])
+}
+
 model Media {
-  id        String    @id @default(cuid())
-  productId String
-  url       String
-  type      MediaType @default(IMAGE)
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
+  id          String    @id @default(cuid())
+  productId   String?
+  url         String
+  fileName    String    @default("")
+  fileType    String    @default("image/jpeg")
+  fileSize    Int       @default(0)
+  storagePath String    @default("")
+  type        MediaType @default(IMAGE)
+  createdAt   DateTime  @default(now())
+  product     Product?  @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([fileType])
 }
 
 model AdminLog {
   id        String   @id @default(cuid())
   adminId   String
   action    String
-  createdAt DateTime @default(now())
+  timestamp DateTime @default(now())
   admin     User     @relation("AdminLogs", fields: [adminId], references: [id])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String?
+  actorName     String
+  action        String
+  module        String
+  entityType    String?
+  entityId      String?
+  field         String?
+  previousValue Json?
+  newValue      Json?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  actor         User?    @relation("AuditLogActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([module])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model ImportHistory {
+  id              String   @id @default(cuid())
+  type            String
+  fileName        String
+  totalRows       Int
+  importedRecords Int
+  failedRecords   Int
+  errorReport     Json?
+  adminId         String
+  createdAt       DateTime @default(now())
+  admin           User     @relation("ImportHistoryAdmin", fields: [adminId], references: [id])
+
+  @@index([type])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model ProductView {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(cuid())
+  eventType AnalyticsEventType
+  userId    String?
+  metadata  Json?
+  createdAt DateTime           @default(now())
+  user      User?              @relation(fields: [userId], references: [id])
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  productId String
+  orderId   String?
+  change    Int
+  reason    String
+  createdAt DateTime @default(now())
+  order     Order?   @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model MarketingCampaign {
+  id                 String                     @id @default(cuid())
+  name               String
+  discountPercentage Int
+  status             CampaignStatus             @default(DRAFT)
+  startsAt           DateTime
+  endsAt             DateTime
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  products           MarketingCampaignProduct[]
+
+  @@index([status])
+  @@index([startsAt])
+  @@index([endsAt])
+}
+
+model MarketingCampaignProduct {
+  campaignId String
+  productId  String
+  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product    Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, productId])
+  @@index([productId])
+}
+
+model Coupon {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  discountPercentage Int
+  minimumOrderAmount Decimal  @default(0) @db.Decimal(10, 2)
+  expiresAt          DateTime
+  usageLimit         Int?
+  usageCount         Int      @default(0)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([code])
+  @@index([expiresAt])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("website")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model SiteContent {
+  id          String   @id @default(cuid())
+  section     String   @unique
+  title       String
+  description String?
+  imageUrl    String?
+  updatedAt   DateTime @updatedAt
+}
+
+model HomepageBanner {
+  id             String   @id @default(cuid())
+  title          String
+  subtitle       String
+  imageUrl       String?
+  primaryLabel   String   @default("Shop Products")
+  primaryLink    String   @default("/products")
+  secondaryLabel String   @default("Request a Quote")
+  secondaryLink  String   @default("#request-quote")
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Promotion {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  ctaLabel    String    @default("View offer")
+  ctaLink     String    @default("/products")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, startsAt, endsAt])
+  @@index([sortOrder])
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  logoUrl   String?
+  website   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model IndustrySolution {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  ctaLabel    String   @default("Explore Solutions")
+  ctaLink     String   @default("/services")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String?
+  ctaLink     String   @default("/services")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model QuoteRequest {
+  id              String   @id @default(cuid())
+  name            String
+  company         String?
+  phone           String
+  email           String
+  productInterest String?
+  message         String
+  productId       String?
+  status          String   @default("NEW")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product? @relation(fields: [productId], references: [id])
+
+  @@index([status])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  customer  String
+  company   String?
+  review    String
+  rating    Int      @default(5)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model DataSource {
+  id               String             @id @default(cuid())
+  name             String
+  type             DataSourceType
+  connectionType   ConnectionType
+  country          SourceCountry      @default(INTERNATIONAL)
+  updateFrequency  UpdateFrequency    @default(DAILY)
+  status           IntegrationStatus  @default(INACTIVE)
+  baseUrl          String?
+  contactEmail     String?
+  notes            String?
+  manufacturerId   String?
+  supplierId       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  automationJobs   AutomationJob[]
+  automationLogs   AutomationLog[]
+  catalogueImports CatalogueImport[]
+  manufacturer     Manufacturer?      @relation(fields: [manufacturerId], references: [id])
+  supplier         Supplier?          @relation(fields: [supplierId], references: [id])
+  imageSources     ImageSource[]
+  discoveries      ProductDiscovery[]
+  productSources   ProductSource[]
+  supplierProducts SupplierProduct[]
+
+  @@index([type])
+  @@index([connectionType])
+  @@index([status])
+  @@index([updateFrequency])
+}
+
+model Manufacturer {
+  id         String          @id @default(cuid())
+  name       String          @unique
+  slug       String          @unique
+  website    String?
+  country    SourceCountry   @default(INTERNATIONAL)
+  priority   Int             @default(100)
+  categories String[]        @default([])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  connectors DataSource[]
+  products   ProductSource[]
+
+  @@index([priority])
+}
+
+model Supplier {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  slug        String            @unique
+  country     SourceCountry     @default(KENYA)
+  contactName String?
+  email       String?
+  phone       String?
+  website     String?
+  status      IntegrationStatus @default(INACTIVE)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  connectors  DataSource[]
+  products    SupplierProduct[]
+
+  @@index([status])
+}
+
+model ProductSource {
+  id              String                @id @default(cuid())
+  productId       String?
+  dataSourceId    String
+  manufacturerId  String?
+  sourceProductId String?
+  sourceUrl       String?
+  name            String
+  modelNumber     String?
+  sku             String?
+  barcode         String?
+  brand           String
+  categoryName    String?
+  description     String?
+  specifications  Json?
+  imageUrls       String[]              @default([])
+  datasheetUrls   String[]              @default([])
+  warrantyInfo    String?
+  rawData         Json?
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String[]              @default([])
+  status          ProductSourceStatus   @default(DETECTED)
+  imageVerified   Boolean               @default(false)
+  createdProduct  Boolean               @default(false)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  imageSources    ImageSource[]
+  discoveries     ProductDiscovery[]
+  matches         ProductMatch[]
+  qualityChecks   ProductQualityCheck[]
+  dataSource      DataSource            @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  manufacturer    Manufacturer?         @relation(fields: [manufacturerId], references: [id])
+  product         Product?              @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([dataSourceId])
+  @@index([manufacturerId])
+  @@index([brand])
+  @@index([modelNumber])
+  @@index([sku])
+  @@index([status])
+}
+
+model SupplierProduct {
+  id                String      @id @default(cuid())
+  productId         String?
+  supplierId        String?
+  dataSourceId      String?
+  supplierSku       String?
+  modelNumber       String?
+  name              String
+  brand             String
+  costPrice         Decimal?    @db.Decimal(12, 2)
+  distributorPrice  Decimal?    @db.Decimal(12, 2)
+  currency          String      @default("KES")
+  availableQuantity Int?
+  leadTimeDays      Int?
+  warrantyInfo      String?
+  rawData           Json?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  dataSource        DataSource? @relation(fields: [dataSourceId], references: [id])
+  product           Product?    @relation(fields: [productId], references: [id])
+  supplier          Supplier?   @relation(fields: [supplierId], references: [id])
+
+  @@index([productId])
+  @@index([supplierId])
+  @@index([dataSourceId])
+  @@index([supplierSku])
+  @@index([modelNumber])
+}
+
+model ProductMatch {
+  id                 String          @id @default(cuid())
+  productSourceId    String
+  primaryProductId   String?
+  candidateProductId String?
+  confidence         MatchConfidence @default(MEDIUM)
+  score              Decimal         @default(0) @db.Decimal(5, 2)
+  matchedOn          String[]        @default([])
+  notes              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  candidateProduct   Product?        @relation("CandidateProductMatches", fields: [candidateProductId], references: [id])
+  primaryProduct     Product?        @relation("PrimaryProductMatches", fields: [primaryProductId], references: [id])
+  productSource      ProductSource   @relation(fields: [productSourceId], references: [id], onDelete: Cascade)
+
+  @@index([productSourceId])
+  @@index([primaryProductId])
+  @@index([candidateProductId])
+  @@index([confidence])
+}
+
+model PriceHistory {
+  id                    String   @id @default(cuid())
+  productId             String
+  source                String
+  costPrice             Decimal? @db.Decimal(12, 2)
+  marketPrice           Decimal? @db.Decimal(12, 2)
+  recommendedPrice      Decimal  @db.Decimal(12, 2)
+  currency              String   @default("KES")
+  exchangeRate          Decimal? @db.Decimal(12, 4)
+  operatingCostAmount   Decimal  @default(0) @db.Decimal(12, 2)
+  targetMarginPercent   Decimal  @db.Decimal(5, 2)
+  kenyaMarketAdjustment Decimal  @default(0) @db.Decimal(12, 2)
+  reason                String?
+  createdAt             DateTime @default(now())
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model MarketPriceIndex {
+  id                    String   @id @default(cuid())
+  productId             String   @unique
+  averageKenyaPrice     Decimal  @db.Decimal(12, 2)
+  lowestMarketPrice     Decimal  @db.Decimal(12, 2)
+  highestMarketPrice    Decimal  @db.Decimal(12, 2)
+  recommendedCeterPrice Decimal  @db.Decimal(12, 2)
+  sampleSize            Int      @default(0)
+  sources               Json?
+  updatedAt             DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  product               Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+}
+
+model PriceRule {
+  id                     String         @id @default(cuid())
+  name                   String
+  scope                  PriceRuleScope @default(GLOBAL)
+  categoryId             String?
+  brand                  String?
+  productId              String?
+  targetMarginPercent    Decimal        @db.Decimal(5, 2)
+  operatingCostPercent   Decimal        @default(0) @db.Decimal(5, 2)
+  kenyaAdjustmentPercent Decimal        @default(0) @db.Decimal(5, 2)
+  minimumMarginAmount    Decimal        @default(0) @db.Decimal(12, 2)
+  isActive               Boolean        @default(true)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  @@index([scope])
+  @@index([categoryId])
+  @@index([brand])
+  @@index([productId])
+  @@index([isActive])
+}
+
+model InventoryLog {
+  id                 String   @id @default(cuid())
+  productId          String
+  supplierProductId  String?
+  warehouseQuantity  Int      @default(0)
+  supplierQuantity   Int      @default(0)
+  availableQuantity  Int      @default(0)
+  restockRecommended Boolean  @default(false)
+  note               String?
+  createdAt          DateTime @default(now())
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([supplierProductId])
+  @@index([createdAt])
+}
+
+model AutomationJob {
+  id              String              @id @default(cuid())
+  name            String
+  type            AutomationJobType
+  status          AutomationJobStatus @default(QUEUED)
+  dataSourceId    String?
+  schedule        String?
+  progress        Int                 @default(0)
+  totalItems      Int                 @default(0)
+  completedItems  Int                 @default(0)
+  errors          Int                 @default(0)
+  recordsRead     Int                 @default(0)
+  productsCreated Int                 @default(0)
+  imagesCollected Int                 @default(0)
+  pricesUpdated   Int                 @default(0)
+  failedRecords   Int                 @default(0)
+  missingInfo     Json?
+  opportunities   Json?
+  errorMessage    String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  dataSource      DataSource?         @relation(fields: [dataSourceId], references: [id])
+  logs            AutomationLog[]
+
+  @@index([type])
+  @@index([status])
+  @@index([dataSourceId])
+  @@index([createdAt])
+}
+
+model ProductDiscovery {
+  id               String          @id @default(cuid())
+  productSourceId  String?
+  productId        String?
+  dataSourceId     String?
+  detectedName     String
+  detectedBrand    String?
+  detectedCategory String?
+  confidenceScore  Decimal         @default(0) @db.Decimal(5, 2)
+  status           DiscoveryStatus @default(NEW)
+  notes            String?
+  evidence         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  dataSource       DataSource?     @relation(fields: [dataSourceId], references: [id])
+  product          Product?        @relation(fields: [productId], references: [id])
+  productSource    ProductSource?  @relation(fields: [productSourceId], references: [id])
+
+  @@index([productSourceId])
+  @@index([productId])
+  @@index([dataSourceId])
+  @@index([status])
+  @@index([detectedBrand])
+}
+
+model ProductQualityCheck {
+  id                String             @id @default(cuid())
+  productId         String?
+  productSourceId   String?
+  status            QualityCheckStatus @default(NEEDS_ATTENTION)
+  hasName           Boolean            @default(false)
+  hasBrand          Boolean            @default(false)
+  hasCategory       Boolean            @default(false)
+  hasImage          Boolean            @default(false)
+  hasSpecifications Boolean            @default(false)
+  hasPrice          Boolean            @default(false)
+  issues            String[]           @default([])
+  checkedAt         DateTime           @default(now())
+  product           Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productSource     ProductSource?     @relation(fields: [productSourceId], references: [id])
+
+  @@index([productId])
+  @@index([productSourceId])
+  @@index([status])
+  @@index([checkedAt])
+}
+
+model AutomationLog {
+  id              String         @id @default(cuid())
+  automationJobId String?
+  dataSourceId    String?
+  level           String         @default("info")
+  message         String
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+  automationJob   AutomationJob? @relation(fields: [automationJobId], references: [id], onDelete: Cascade)
+  dataSource      DataSource?    @relation(fields: [dataSourceId], references: [id])
+
+  @@index([automationJobId])
+  @@index([dataSourceId])
+  @@index([level])
+  @@index([createdAt])
+}
+
+model ImageSource {
+  id              String              @id @default(cuid())
+  productId       String?
+  productSourceId String?
+  dataSourceId    String?
+  url             String
+  storageUrl      String?
+  source          ImageSourcePriority
+  isVerified      Boolean             @default(false)
+  collectedAt     DateTime            @default(now())
+  dataSource      DataSource?         @relation(fields: [dataSourceId], references: [id])
+  product         Product?            @relation(fields: [productId], references: [id])
+  productSource   ProductSource?      @relation(fields: [productSourceId], references: [id])
+
+  @@index([productId])
+  @@index([productSourceId])
+  @@index([dataSourceId])
+  @@index([source])
+  @@index([isVerified])
+}
+
+model CatalogueImport {
+  id               String              @id @default(cuid())
+  dataSourceId     String?
+  fileName         String
+  fileType         ConnectionType
+  status           AutomationJobStatus @default(QUEUED)
+  totalRows        Int                 @default(0)
+  detectedProducts Int                 @default(0)
+  createdProducts  Int                 @default(0)
+  matchedProducts  Int                 @default(0)
+  failedRows       Int                 @default(0)
+  errorReport      Json?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  dataSource       DataSource?         @relation(fields: [dataSourceId], references: [id])
+
+  @@index([dataSourceId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum PermissionModule {
+  PRODUCTS
+  ORDERS
+  CUSTOMERS
+  REPORTS
+  SETTINGS
+  USERS
+  ROLES
+  PERMISSIONS
+  CATEGORIES
+  MEDIA
+  MARKETING
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  EDIT
+  DELETE
+  BULK
+  CANCEL
+  UPDATE_STATUS
+  EXPORT
+  MANAGE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum DeliveryStatus {
+  PENDING
+  READY_FOR_DISPATCH
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ProductStatus {
+  ACTIVE
+  OUT_OF_STOCK
+  DRAFT
+  NEEDS_ATTENTION
+}
+
+enum AnalyticsEventType {
+  PRODUCT_VIEW
+  ADD_TO_CART
+  CHECKOUT_STARTED
+  PURCHASE
+  NEWSLETTER_SUBSCRIBE
+}
+
+enum ProductBadge {
+  FEATURED
+  NEW_ARRIVAL
+  BEST_SELLER
+  PROMOTION
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
+enum DataSourceType {
+  MANUFACTURER
+  SUPPLIER
+  DISTRIBUTOR
+  RETAILER
+}
+
+enum ConnectionType {
+  API
+  EXCEL
+  CSV
+  XML
+  JSON
+  WEB_CATALOGUE
+}
+
+enum SourceCountry {
+  KENYA
+  INTERNATIONAL
+}
+
+enum UpdateFrequency {
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AutomationJobType {
+  MANUFACTURER_SYNC
+  SUPPLIER_SYNC
+  CATALOGUE_IMPORT
+  IMAGE_COLLECTION
+  SPEC_EXTRACTION
+  PRODUCT_ENRICHMENT
+  PRICE_UPDATE
+  MARKET_PRICE_CHECK
+  INVENTORY_UPDATE
+  SEO_GENERATION
+  MARKETING_ANALYSIS
+  BUSINESS_REPORT
+}
+
+enum AutomationJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ProductSourceStatus {
+  DETECTED
+  ENRICHED
+  MATCHED
+  READY_FOR_REVIEW
+  NEEDS_ATTENTION
+  PUBLISHED
+  REJECTED
+}
+
+enum DiscoveryStatus {
+  NEW
+  EXISTING
+  DUPLICATE
+  NEEDS_ATTENTION
+  APPROVED
+  PUBLISHED
+}
+
+enum QualityCheckStatus {
+  PASSED
+  NEEDS_ATTENTION
+  FAILED
+}
+
+enum MatchConfidence {
+  LOW
+  MEDIUM
+  HIGH
+  EXACT
+}
+
+enum PriceRuleScope {
+  GLOBAL
+  CATEGORY
+  BRAND
+  PRODUCT
+}
+
+enum ImageSourcePriority {
+  MANUFACTURER
+  DISTRIBUTOR
+  APPROVED_RETAILER
+  SUPPLIER
+  MANUAL
 }
