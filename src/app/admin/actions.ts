@@ -56,6 +56,10 @@ const automationJobTypes = [
 const priceRuleScopes = ["GLOBAL", "CATEGORY", "BRAND", "PRODUCT"] as const;
 const quoteStatuses = ["NEW", "CONTACTED", "QUOTED", "CLOSED"] as const;
 
+function hasNoJsonObjectEntries(value: unknown) {
+  return !value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length === 0;
+}
+
 const priorityManufacturers = [
   { name: "HP", categories: ["Printers", "Computers"] },
   { name: "Canon", categories: ["Printers"] },
@@ -560,9 +564,9 @@ export async function runAutomationJob(formData: FormData) {
       select: { specifications: true },
     }),
   ]);
-  const productsWithoutSpecifications = missingSpecs.filter((source) => {
-    return !source.specifications || Object.keys(source.specifications as Record<string, unknown>).length === 0;
-  }).length;
+  const productsWithoutSpecifications = missingSpecs.filter((source: { specifications: unknown }) =>
+    hasNoJsonObjectEntries(source.specifications),
+  ).length;
   const schedule =
     type === "MANUFACTURER_SYNC"
       ? "Daily"
