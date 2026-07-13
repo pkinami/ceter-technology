@@ -1664,7 +1664,7 @@ export async function updateRolePermissions(formData: FormData) {
     module: "permissions",
     entityType: "UserRole",
     entityId: role.id,
-    previousValue: role.permissions.map((item) => item.permission.code),
+    previousValue: role.permissions.map((item: { permission: { code: string } }) => item.permission.code),
     newValue: permissionIds,
   });
   await logAdminAction(admin.id, `Updated permissions for role: ${role.name}`);
