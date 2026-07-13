@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 
 export type ImportKind = "products" | "categories";
@@ -423,7 +423,7 @@ export async function importProducts(adminId: string, fileName: string, rows: Pr
           status,
           badges,
           imageUrl,
-          specifications: parseSpecifications(row.technicalSpecifications) as Prisma.InputJsonValue | undefined,
+          specifications: parseSpecifications(row.technicalSpecifications) as InputJsonValue | undefined,
           categoryId,
           media: {
             create: [

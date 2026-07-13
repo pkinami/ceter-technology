@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { AlertTriangle, BarChart3, Boxes, PackageX, TrendingUp, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -33,11 +32,16 @@ function maxValue(values: number[]) {
 
 const orderInclude = {
   items: { include: { product: { include: { category: true } } } },
-} satisfies Prisma.OrderInclude;
+} as const;
 
-type AnalyticsOrder = Prisma.OrderGetPayload<{
-  include: typeof orderInclude;
-}>;
+function getAnalyticsOrders() {
+  return prisma.order.findMany({
+    include: orderInclude,
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+type AnalyticsOrder = Awaited<ReturnType<typeof getAnalyticsOrders>>[number];
 
 function orderTotal(order: AnalyticsOrder) {
   return Number(order.totalAmount.toString());
@@ -82,10 +86,7 @@ export default async function AdminAnalyticsPage() {
     checkoutEvents,
     stockMovements,
   ] = await Promise.all([
-    prisma.order.findMany({
-      include: orderInclude,
-      orderBy: { createdAt: "asc" },
-    }) as Promise<AnalyticsOrder[]>,
+    getAnalyticsOrders(),
     prisma.user.count({ where: { role: "CUSTOMER" } }),
     prisma.user.count({ where: { role: "CUSTOMER", createdAt: { gte: monthStart } } }),
     prisma.product.findMany({

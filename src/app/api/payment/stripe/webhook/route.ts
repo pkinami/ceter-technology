@@ -1,5 +1,15 @@
 import { prisma } from "@/lib/prisma";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function stringField(payload: Record<string, unknown>, key: string) {
+  const value = payload[key];
+
+  return typeof value === "string" ? value : undefined;
+}
+
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -7,17 +17,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => null);
+  const body: unknown = await request.json().catch(() => null);
 
-  if (!body || typeof body !== "object") {
+  if (!isRecord(body)) {
     return Response.json({ error: "Invalid webhook payload" }, { status: 400 });
   }
 
-  const payload = body as {
-    orderId?: string;
-    orderNumber?: string;
-    paymentIntentId?: string;
-    status?: "succeeded" | "payment_failed" | "processing";
+  const payload = {
+    orderId: stringField(body, "orderId"),
+    orderNumber: stringField(body, "orderNumber"),
+    paymentIntentId: stringField(body, "paymentIntentId"),
+    status: stringField(body, "status"),
   };
   const status =
     payload.status === "succeeded"

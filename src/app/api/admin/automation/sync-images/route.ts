@@ -1,6 +1,6 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { after, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
 import { runBulkImageAutomation } from "@/lib/services/imageAutomation";
@@ -39,9 +39,21 @@ async function log(jobId: string, level: string, message: string, metadata?: Rec
       automationJobId: jobId,
       level,
       message,
-      metadata: (metadata ?? {}) as Prisma.InputJsonValue,
+      metadata: (metadata ?? {}) as InputJsonValue,
     },
   });
+}
+
+function getLimit(value: unknown) {
+  if (!value || typeof value !== "object" || !("limit" in value)) {
+    return 500;
+  }
+
+  const limit = value.limit;
+
+  return typeof limit === "number" && Number.isFinite(limit)
+    ? Math.max(1, Math.min(500, Math.floor(limit)))
+    : 500;
 }
 
 async function runImageJob(jobId: string, adminId: string, limit: number) {
@@ -144,10 +156,8 @@ async function runImageJob(jobId: string, adminId: string, limit: number) {
 
 export async function POST(request: Request) {
   const admin = await requirePermission("PRODUCTS", "EDIT");
-  const body = await request.json().catch(() => ({})) as { limit?: unknown };
-  const limit = typeof body.limit === "number" && Number.isFinite(body.limit)
-    ? Math.max(1, Math.min(500, Math.floor(body.limit)))
-    : 500;
+  const body: unknown = await request.json().catch(() => null);
+  const limit = getLimit(body);
   const job = await prisma.automationJob.create({
     data: {
       name: "Product Image Automation",

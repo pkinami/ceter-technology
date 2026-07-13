@@ -17,13 +17,17 @@ function isPreview(value: unknown): value is ProductIntelligencePreview {
   );
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 export async function POST(request: NextRequest) {
   const admin = await requirePermission("PRODUCTS", "BULK");
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
 
-    if (!isPreview(body.preview)) {
+    if (!isRecord(body) || !isPreview(body.preview)) {
       return NextResponse.json({ ok: false, message: "Invalid product intelligence preview." }, { status: 400 });
     }
 

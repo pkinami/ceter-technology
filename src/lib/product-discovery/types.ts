@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 
 export type DiscoverySourceKind = "manufacturer" | "public_catalogue";
 
@@ -25,7 +25,7 @@ export type RawDiscoveredProduct = {
   datasheetUrls?: string[];
   price?: number | null;
   currency?: string | null;
-  rawData?: Prisma.InputJsonValue;
+  rawData?: InputJsonValue;
 };
 
 export type NormalizedDiscoveredProduct = RawDiscoveredProduct & {

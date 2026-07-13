@@ -1,4 +1,5 @@
-import type { ConnectionType, Prisma } from "@prisma/client";
+import type { ConnectionType } from "@prisma/client";
+import type { InputJsonObject } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/imports";
 
@@ -581,7 +582,7 @@ export async function processProductIntelligenceImport({
 
   for (const row of preview.rows) {
     try {
-      const specifications = extractSpecifications(row.rawData) as Prisma.InputJsonObject;
+      const specifications = extractSpecifications(row.rawData) as InputJsonObject;
       const seoKeywords = [row.brand, row.categoryName, row.modelNumber, row.sku]
         .filter((value): value is string => Boolean(value))
         .map((value) => value.toLowerCase());
@@ -602,7 +603,7 @@ export async function processProductIntelligenceImport({
           imageUrls: row.imageUrls,
           datasheetUrls: datasheetUrlsFrom(row.rawData),
           warrantyInfo: valueFrom(row.rawData, textKeys.warranty) || null,
-          rawData: row.rawData as Prisma.InputJsonObject,
+          rawData: row.rawData as InputJsonObject,
           seoTitle: row.seoTitle,
           seoDescription: seoDescription(row.name, row.brand, row.categoryName, row.description),
           seoKeywords,

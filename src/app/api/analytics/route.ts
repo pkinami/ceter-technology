@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { z } from "zod";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { rateLimit } from "@/lib/rate-limit";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
   await trackAnalyticsEvent({
     eventType: parsed.data.eventType,
-    metadata: parsed.data.metadata as Prisma.InputJsonValue | undefined,
+    metadata: parsed.data.metadata as InputJsonValue | undefined,
   });
 
   return NextResponse.json({ ok: true });

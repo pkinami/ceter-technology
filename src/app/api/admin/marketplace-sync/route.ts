@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { after } from "next/server";
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
 import { runProductDiscoveryEngine } from "@/lib/product-discovery";
@@ -45,7 +45,7 @@ async function log(jobId: string, level: string, message: string, metadata?: Rec
       automationJobId: jobId,
       level,
       message,
-      metadata: (metadata ?? {}) as Prisma.InputJsonValue,
+      metadata: (metadata ?? {}) as InputJsonValue,
     },
   });
 }

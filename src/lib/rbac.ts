@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import type { PermissionAction, PermissionModule, Prisma } from "@prisma/client";
+import type { PermissionAction, PermissionModule } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -271,9 +272,9 @@ export async function logAudit(input: {
   entityType?: string;
   entityId?: string;
   field?: string;
-  previousValue?: Prisma.InputJsonValue;
-  newValue?: Prisma.InputJsonValue;
-  metadata?: Prisma.InputJsonValue;
+  previousValue?: InputJsonValue;
+  newValue?: InputJsonValue;
+  metadata?: InputJsonValue;
 }) {
   await prisma.auditLog.create({
     data: {

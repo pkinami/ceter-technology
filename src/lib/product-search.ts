@@ -1,6 +1,9 @@
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mapProduct } from "@/lib/catalog";
+
+type ProductFindManyArgs = NonNullable<Parameters<typeof prisma.product.findMany>[0]>;
+type ProductInclude = NonNullable<ProductFindManyArgs["include"]>;
+type ProductWhereInput = NonNullable<ProductFindManyArgs["where"]>;
 
 const searchInclude = {
   category: {
@@ -12,7 +15,7 @@ const searchInclude = {
     where: { type: "IMAGE" as const },
     orderBy: { createdAt: "asc" as const },
   },
-} satisfies Prisma.ProductInclude;
+} satisfies ProductInclude;
 
 export type ProductSearchFilters = {
   query?: string;
@@ -31,7 +34,7 @@ function cleanQuery(value?: string) {
 export async function searchProducts(filters: ProductSearchFilters) {
   const query = cleanQuery(filters.query);
   const limit = Math.min(Math.max(filters.limit ?? 36, 1), 100);
-  const where: Prisma.ProductWhereInput = {
+  const where: ProductWhereInput = {
     status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
     ...(filters.brand && filters.brand !== "All" ? { brand: { equals: filters.brand, mode: "insensitive" } } : {}),
     ...(filters.minPrice || filters.maxPrice

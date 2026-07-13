@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/types";
@@ -13,11 +12,22 @@ const publicProductInclude = {
     where: { type: "IMAGE" as const },
     orderBy: { createdAt: "asc" as const },
   },
-} satisfies Prisma.ProductInclude;
+} as const;
 
-type ProductWithRelations = Prisma.ProductGetPayload<{
-  include: typeof publicProductInclude;
-}>;
+function getPublicProductRows(limit?: number) {
+  return prisma.product.findMany({
+    where: {
+      status: {
+        in: ["ACTIVE", "OUT_OF_STOCK"],
+      },
+    },
+    include: publicProductInclude,
+    orderBy: { createdAt: "desc" },
+    ...(limit ? { take: Math.min(Math.max(limit, 1), 200) } : {}),
+  });
+}
+
+type ProductWithRelations = Awaited<ReturnType<typeof getPublicProductRows>>[number];
 
 export type CatalogueCategory = {
   id: string;
@@ -27,7 +37,7 @@ export type CatalogueCategory = {
   productCount: number;
 };
 
-function stringifySpecs(value: Prisma.JsonValue | null): Record<string, string> {
+function stringifySpecs(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
@@ -84,30 +94,13 @@ export function mapProduct(product: ProductWithRelations): Product {
 }
 
 export const getPublicProducts = unstable_cache(async () => {
-  const products = await prisma.product.findMany({
-    where: {
-      status: {
-        in: ["ACTIVE", "OUT_OF_STOCK"],
-      },
-    },
-    include: publicProductInclude,
-    orderBy: { createdAt: "desc" },
-  });
+  const products = await getPublicProductRows();
 
   return products.map(mapProduct);
 }, ["public-products"], { tags: ["products", "catalogue"], revalidate: 300 });
 
 export const getPublicProductShelf = unstable_cache(async (limit = 96) => {
-  const products = await prisma.product.findMany({
-    where: {
-      status: {
-        in: ["ACTIVE", "OUT_OF_STOCK"],
-      },
-    },
-    include: publicProductInclude,
-    orderBy: { createdAt: "desc" },
-    take: Math.min(Math.max(limit, 1), 200),
-  });
+  const products = await getPublicProductRows(limit);
 
   return products.map(mapProduct);
 }, ["public-product-shelf"], { tags: ["products", "catalogue"], revalidate: 300 });

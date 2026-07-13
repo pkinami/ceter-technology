@@ -1,10 +1,11 @@
-import type { AnalyticsEventType, Prisma } from "@prisma/client";
+import type { AnalyticsEventType } from "@prisma/client";
+import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 
 export async function trackAnalyticsEvent(input: {
   eventType: AnalyticsEventType;
   userId?: string | null;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: InputJsonValue;
 }) {
   try {
     await prisma.analyticsEvent.create({
@@ -22,7 +23,7 @@ export async function trackAnalyticsEvent(input: {
 export async function trackProductView(input: {
   productId: string;
   userId?: string | null;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: InputJsonValue;
 }) {
   try {
     await prisma.$transaction([

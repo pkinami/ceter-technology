@@ -14,13 +14,17 @@ function isImportKind(value: unknown): value is ImportKind {
   return value === "products" || value === "categories";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 export async function POST(request: NextRequest) {
   const admin = await requirePermission("PRODUCTS", "BULK");
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
 
-    if (!isImportKind(body.kind) || !Array.isArray(body.rows)) {
+    if (!isRecord(body) || !isImportKind(body.kind) || !Array.isArray(body.rows)) {
       return NextResponse.json({ ok: false, message: "Invalid import request." }, { status: 400 });
     }
 
