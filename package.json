@@ -16,6 +16,7 @@
     "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1",
+    "@vercel/speed-insights": "^2.0.0",
     "cloudinary": "latest",
     "clsx": "^2.1.1",
     "lucide-react": "^1.23.0",
