@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { AlertTriangle, BarChart3, Boxes, PackageX, TrendingUp, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,18 @@ function monthKey(date: Date) {
 
 function maxValue(values: number[]) {
   return Math.max(1, ...values);
+}
+
+const orderInclude = {
+  items: { include: { product: { include: { category: true } } } },
+} satisfies Prisma.OrderInclude;
+
+type AnalyticsOrder = Prisma.OrderGetPayload<{
+  include: typeof orderInclude;
+}>;
+
+function orderTotal(order: AnalyticsOrder) {
+  return Number(order.totalAmount.toString());
 }
 
 function MiniBars({ data }: { data: { label: string; value: number }[] }) {
@@ -70,11 +83,9 @@ export default async function AdminAnalyticsPage() {
     stockMovements,
   ] = await Promise.all([
     prisma.order.findMany({
-      include: {
-        items: { include: { product: { include: { category: true } } } },
-      },
+      include: orderInclude,
       orderBy: { createdAt: "asc" },
-    }),
+    }) as Promise<AnalyticsOrder[]>,
     prisma.user.count({ where: { role: "CUSTOMER" } }),
     prisma.user.count({ where: { role: "CUSTOMER", createdAt: { gte: monthStart } } }),
     prisma.product.findMany({
@@ -96,22 +107,22 @@ export default async function AdminAnalyticsPage() {
     }),
   ]);
 
-  const revenue = orders.reduce((total, order) => total + Number(order.totalAmount), 0);
+  const revenue = orders.reduce((total, order) => total + orderTotal(order), 0);
   const monthlyRevenue = orders
     .filter((order) => order.createdAt >= monthStart)
-    .reduce((total, order) => total + Number(order.totalAmount), 0);
+    .reduce((total, order) => total + orderTotal(order), 0);
   const weeklyRevenue = orders
     .filter((order) => order.createdAt >= weekStart)
-    .reduce((total, order) => total + Number(order.totalAmount), 0);
+    .reduce((total, order) => total + orderTotal(order), 0);
   const dailyRevenue = orders
     .filter((order) => order.createdAt >= dayStart)
-    .reduce((total, order) => total + Number(order.totalAmount), 0);
+    .reduce((total, order) => total + orderTotal(order), 0);
   const averageOrderValue = orders.length > 0 ? revenue / orders.length : 0;
 
   const revenueByMonth = Array.from(
     orders.reduce((map, order) => {
       const key = monthKey(order.createdAt);
-      map.set(key, (map.get(key) ?? 0) + Number(order.totalAmount));
+      map.set(key, (map.get(key) ?? 0) + orderTotal(order));
       return map;
     }, new Map<string, number>()),
   ).map(([label, value]) => ({ label, value }));
