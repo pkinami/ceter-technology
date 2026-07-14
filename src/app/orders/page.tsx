@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { PackageCheck } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +19,8 @@ function money(value: { toString(): string }) {
 }
 
 export default async function OrdersPage() {
+  await connection();
+
   const user = await getCurrentUser();
 
   if (!user) {

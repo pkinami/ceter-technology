@@ -5,8 +5,10 @@ import nextEnv from "@next/env";
 const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set. Check .env before running the seed script.");
+const databaseUrl = process.env.POSTGRES_PRISMA_URL;
+
+if (!databaseUrl) {
+  throw new Error("POSTGRES_PRISMA_URL is not set. Check .env before running the seed script.");
 }
 
 function getConnectionStringWithSslMode(connectionString, sslMode) {
@@ -18,7 +20,7 @@ function getConnectionStringWithSslMode(connectionString, sslMode) {
 
 const adapter = new PrismaPg({
   connectionString: getConnectionStringWithSslMode(
-    process.env.DATABASE_URL,
+    databaseUrl,
     process.env.NODE_ENV === "production" ? "verify-full" : "no-verify",
   ),
 });

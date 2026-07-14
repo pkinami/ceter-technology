@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { logServerError } from "@/lib/server-logging";
 import type { Product } from "@/types";
 
 const publicProductInclude = {
@@ -25,6 +26,19 @@ function getPublicProductRows(limit?: number) {
     orderBy: { createdAt: "desc" },
     ...(limit ? { take: Math.min(Math.max(limit, 1), 200) } : {}),
   });
+}
+
+async function withCatalogueLogging<T>(
+  operation: string,
+  context: Record<string, unknown>,
+  action: () => Promise<T>,
+) {
+  try {
+    return await action();
+  } catch (error) {
+    logServerError("catalogue.load.failed", error, { operation, ...context });
+    throw error;
+  }
 }
 
 type ProductWithRelations = Awaited<ReturnType<typeof getPublicProductRows>>[number];
@@ -94,76 +108,86 @@ export function mapProduct(product: ProductWithRelations): Product {
 }
 
 export const getPublicProducts = unstable_cache(async () => {
-  const products = await getPublicProductRows();
+  const products = await withCatalogueLogging("getPublicProducts", {}, () => getPublicProductRows());
 
   return products.map(mapProduct);
 }, ["public-products"], { tags: ["products", "catalogue"], revalidate: 300 });
 
 export const getPublicProductShelf = unstable_cache(async (limit = 96) => {
-  const products = await getPublicProductRows(limit);
+  const products = await withCatalogueLogging("getPublicProductShelf", { limit }, () =>
+    getPublicProductRows(limit),
+  );
 
   return products.map(mapProduct);
 }, ["public-product-shelf"], { tags: ["products", "catalogue"], revalidate: 300 });
 
 export const getProductBySlug = unstable_cache(async (slug: string) => {
-  const product = await prisma.product.findFirst({
-    where: {
-      slug,
-      status: {
-        in: ["ACTIVE", "OUT_OF_STOCK"],
+  const product = await withCatalogueLogging("getProductBySlug", { slug }, () =>
+    prisma.product.findFirst({
+      where: {
+        slug,
+        status: {
+          in: ["ACTIVE", "OUT_OF_STOCK"],
+        },
       },
-    },
-    include: publicProductInclude,
-  });
+      include: publicProductInclude,
+    }),
+  );
 
   return product ? mapProduct(product) : null;
 }, ["product-by-slug"], { tags: ["products", "catalogue"], revalidate: 300 });
 
 export async function getRelatedProducts(product: Product, limit = 4) {
-  const source = await prisma.product.findUnique({
-    where: { id: product.id },
-    select: { categoryId: true, brand: true },
-  });
+  const source = await withCatalogueLogging("getRelatedProducts.source", { productId: product.id }, () =>
+    prisma.product.findUnique({
+      where: { id: product.id },
+      select: { categoryId: true, brand: true },
+    }),
+  );
 
   if (!source) {
     return [];
   }
 
-  const related = await prisma.product.findMany({
-    where: {
-      id: { not: product.id },
-      status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
-      OR: [
-        { categoryId: source.categoryId },
-        ...(source.brand ? [{ brand: { equals: source.brand, mode: "insensitive" as const } }] : []),
-      ],
-    },
-    include: publicProductInclude,
-    orderBy: [{ stock: "desc" }, { createdAt: "desc" }],
-    take: limit,
-  });
+  const related = await withCatalogueLogging("getRelatedProducts.products", { productId: product.id, limit }, () =>
+    prisma.product.findMany({
+      where: {
+        id: { not: product.id },
+        status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
+        OR: [
+          { categoryId: source.categoryId },
+          ...(source.brand ? [{ brand: { equals: source.brand, mode: "insensitive" as const } }] : []),
+        ],
+      },
+      include: publicProductInclude,
+      orderBy: [{ stock: "desc" }, { createdAt: "desc" }],
+      take: limit,
+    }),
+  );
 
   return related.map(mapProduct);
 }
 
 export const getCatalogueCategories = unstable_cache(async (): Promise<CatalogueCategory[]> => {
-  const categories = await prisma.category.findMany({
-    include: {
-      parent: true,
-      _count: {
-        select: {
-          products: {
-            where: {
-              status: {
-                in: ["ACTIVE", "OUT_OF_STOCK"],
+  const categories = await withCatalogueLogging("getCatalogueCategories", {}, () =>
+    prisma.category.findMany({
+      include: {
+        parent: true,
+        _count: {
+          select: {
+            products: {
+              where: {
+                status: {
+                  in: ["ACTIVE", "OUT_OF_STOCK"],
+                },
               },
             },
           },
         },
       },
-    },
-    orderBy: [{ parentId: "asc" }, { name: "asc" }],
-  });
+      orderBy: [{ parentId: "asc" }, { name: "asc" }],
+    }),
+  );
 
   return categories.map((category) => ({
     id: category.id,
@@ -175,17 +199,19 @@ export const getCatalogueCategories = unstable_cache(async (): Promise<Catalogue
 }, ["catalogue-categories"], { tags: ["categories", "catalogue"], revalidate: 600 });
 
 export const getCatalogueBrands = unstable_cache(async () => {
-  const brands = await prisma.product.findMany({
-    where: {
-      status: {
-        in: ["ACTIVE", "OUT_OF_STOCK"],
+  const brands = await withCatalogueLogging("getCatalogueBrands", {}, () =>
+    prisma.product.findMany({
+      where: {
+        status: {
+          in: ["ACTIVE", "OUT_OF_STOCK"],
+        },
+        NOT: { brand: "" },
       },
-      NOT: { brand: "" },
-    },
-    select: { brand: true },
-    distinct: ["brand"],
-    orderBy: { brand: "asc" },
-  });
+      select: { brand: true },
+      distinct: ["brand"],
+      orderBy: { brand: "asc" },
+    }),
+  );
 
   return brands.map((product) => product.brand).filter(Boolean);
 }, ["catalogue-brands"], { tags: ["products", "catalogue"], revalidate: 600 });

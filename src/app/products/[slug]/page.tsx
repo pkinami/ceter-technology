@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { after } from "next/server";
+import { after, connection } from "next/server";
 import { BadgeCheck, ChevronRight, Download, Home, MessageCircle, PackageCheck, ShieldCheck, Truck, Wrench } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
@@ -67,6 +67,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailsPage({ params }: Props) {
+  await connection();
+
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 

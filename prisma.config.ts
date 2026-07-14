@@ -1,28 +1,35 @@
 import { loadEnvConfig } from "@next/env";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
+import { databaseEnv, requireFirstEnv } from "./src/lib/env";
 
 loadEnvConfig(process.cwd());
 
-function getConnectionStringWithSslMode(connectionString: string, sslMode: string) {
+function getConnectionStringWithSupabaseSsl(connectionString: string) {
   const url = new URL(connectionString);
-  url.searchParams.set("sslmode", sslMode);
+  url.searchParams.set("sslmode", "require");
+  url.searchParams.set("uselibpqcompat", "true");
 
   return url.toString();
 }
 
-function getDatasourceUrl() {
-  const connectionString = env("DATABASE_URL");
+function getDirectDatasourceUrl() {
+  const connectionString = process.env.POSTGRES_URL_NON_POOLING;
+  const command = process.argv.find((item) => item === "generate" || item === "validate");
 
-  if (process.env.NODE_ENV === "production") {
-    return getConnectionStringWithSslMode(connectionString, "verify-full");
+  if (!connectionString && command) {
+    return "postgresql://prisma:prisma@localhost:5432/prisma";
   }
 
-  return getConnectionStringWithSslMode(connectionString, "no-verify");
+  if (!connectionString) {
+    return getConnectionStringWithSupabaseSsl(requireFirstEnv(...databaseEnv.directUrlNames));
+  }
+
+  return getConnectionStringWithSupabaseSsl(connectionString);
 }
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: getDatasourceUrl(),
+    url: getDirectDatasourceUrl(),
   },
 });

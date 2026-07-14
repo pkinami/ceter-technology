@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { mapProduct } from "@/lib/catalog";
+import { logServerError } from "@/lib/server-logging";
 
 type ProductFindManyArgs = NonNullable<Parameters<typeof prisma.product.findMany>[0]>;
 type ProductInclude = NonNullable<ProductFindManyArgs["include"]>;
@@ -59,48 +60,59 @@ export async function searchProducts(filters: ProductSearchFilters) {
       : {}),
   };
 
-  if (!query) {
+  try {
+    if (!query) {
+      const products = await prisma.product.findMany({
+        where,
+        include: searchInclude,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+
+      return products.map(mapProduct);
+    }
+
+    const ranked = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT p.id
+      FROM "Product" p
+      JOIN "Category" c ON c.id = p."categoryId"
+      WHERE p.status IN ('ACTIVE', 'OUT_OF_STOCK')
+        AND to_tsvector('english', concat_ws(' ', p.name, p.brand, p.description, c.name))
+          @@ websearch_to_tsquery('english', ${query})
+      ORDER BY ts_rank_cd(
+        to_tsvector('english', concat_ws(' ', p.name, p.brand, p.description, c.name)),
+        websearch_to_tsquery('english', ${query})
+      ) DESC, p."createdAt" DESC
+      LIMIT ${limit}
+    `;
+    const ids = ranked.map((item) => item.id);
+
+    if (ids.length === 0) {
+      return [];
+    }
+
     const products = await prisma.product.findMany({
-      where,
+      where: {
+        ...where,
+        id: { in: ids },
+      },
       include: searchInclude,
-      orderBy: { createdAt: "desc" },
-      take: limit,
     });
+    const byId = new Map(products.map((product) => [product.id, product]));
 
-    return products.map(mapProduct);
+    return ids.flatMap((id) => {
+      const product = byId.get(id);
+
+      return product ? [mapProduct(product)] : [];
+    });
+  } catch (error) {
+    logServerError("products.search.failed", error, {
+      hasQuery: Boolean(query),
+      brand: filters.brand,
+      category: filters.category,
+      availability: filters.availability,
+      limit,
+    });
+    throw error;
   }
-
-  const ranked = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT p.id
-    FROM "Product" p
-    JOIN "Category" c ON c.id = p."categoryId"
-    WHERE p.status IN ('ACTIVE', 'OUT_OF_STOCK')
-      AND to_tsvector('english', concat_ws(' ', p.name, p.brand, p.description, c.name))
-        @@ websearch_to_tsquery('english', ${query})
-    ORDER BY ts_rank_cd(
-      to_tsvector('english', concat_ws(' ', p.name, p.brand, p.description, c.name)),
-      websearch_to_tsquery('english', ${query})
-    ) DESC, p."createdAt" DESC
-    LIMIT ${limit}
-  `;
-  const ids = ranked.map((item) => item.id);
-
-  if (ids.length === 0) {
-    return [];
-  }
-
-  const products = await prisma.product.findMany({
-    where: {
-      ...where,
-      id: { in: ids },
-    },
-    include: searchInclude,
-  });
-  const byId = new Map(products.map((product) => [product.id, product]));
-
-  return ids.flatMap((id) => {
-    const product = byId.get(id);
-
-    return product ? [mapProduct(product)] : [];
-  });
 }

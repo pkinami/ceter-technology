@@ -1,8 +1,10 @@
 import type { PoolConfig } from "pg";
+import { databaseEnv, requireFirstEnv } from "./env";
 
-function getConnectionStringWithSslMode(connectionString: string, sslMode: string) {
+function getConnectionStringWithSupabaseSsl(connectionString: string) {
   const url = new URL(connectionString);
-  url.searchParams.set("sslmode", sslMode);
+  url.searchParams.set("sslmode", "require");
+  url.searchParams.set("uselibpqcompat", "true");
 
   return url.toString();
 }
@@ -14,11 +16,7 @@ function positiveInteger(value: string | undefined, fallback: number) {
 }
 
 export function getPrismaPgConfig(): PoolConfig {
-  const connectionString = process.env.DATABASE_URL;
-
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set");
-  }
+  const connectionString = requireFirstEnv(...databaseEnv.pooledUrlNames);
 
   const poolConfig = {
     max: positiveInteger(process.env.PRISMA_PG_POOL_MAX, process.env.NODE_ENV === "production" ? 5 : 3),
@@ -26,15 +24,8 @@ export function getPrismaPgConfig(): PoolConfig {
     connectionTimeoutMillis: positiveInteger(process.env.PRISMA_PG_CONNECTION_TIMEOUT_MS, 15_000),
   };
 
-  if (process.env.NODE_ENV !== "production") {
-    return {
-      connectionString: getConnectionStringWithSslMode(connectionString, "no-verify"),
-      ...poolConfig,
-    };
-  }
-
   return {
-    connectionString: getConnectionStringWithSslMode(connectionString, "verify-full"),
+    connectionString: getConnectionStringWithSupabaseSsl(connectionString),
     ...poolConfig,
   };
 }

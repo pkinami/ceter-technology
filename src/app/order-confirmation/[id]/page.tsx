@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { connection } from "next/server";
 import { CheckCircle2, Clock, MessageCircle, PackageCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function OrderConfirmationPage({ params }: Props) {
+  await connection();
+
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },

@@ -7,10 +7,11 @@ Production-ready e-commerce platform for CETER Technology, built with Next.js Ap
 Set these in Vercel and locally:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-DATABASE_URL=
-DIRECT_URL=
+POSTGRES_PRISMA_URL=
+POSTGRES_URL_NON_POOLING=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PUBLISHABLE_KEY=
 ```
 
 Recommended production variables:
@@ -42,6 +43,30 @@ npx prisma generate
 ```
 
 For production, run the generated migration against Supabase before deploying the app.
+
+Production runtime audit:
+
+```bash
+npm run audit:prod
+```
+
+If baseline catalogue and RBAC data are missing:
+
+```bash
+set CONFIRM_PRODUCTION_SETUP=seed
+npm run setup:prod
+```
+
+Create or reset an admin account without hardcoded credentials:
+
+```bash
+set ADMIN_EMAIL=admin@example.com
+set ADMIN_NAME=CETER Admin
+set ADMIN_PASSWORD=
+npm run setup:admin
+```
+
+If `ADMIN_PASSWORD` is not set, the script prompts for it. Existing Supabase Auth users have their password reset and their local user is granted the Super Admin role.
 
 ## Production Build
 

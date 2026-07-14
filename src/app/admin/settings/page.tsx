@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Database, LockKeyhole, Settings } from "lucide-react";
+import { firstEnv, supabaseEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
 import { formatDate } from "../utils";
@@ -18,8 +19,8 @@ export default async function AdminSettingsPage() {
   });
 
   const storageConfigured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    firstEnv(...supabaseEnv.serverUrlNames) &&
+      firstEnv(...supabaseEnv.serverClientKeyNames),
   );
 
   return (

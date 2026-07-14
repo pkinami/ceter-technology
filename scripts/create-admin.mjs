@@ -9,14 +9,16 @@ const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd());
 
-function requiredEnv(name) {
-  const value = process.env[name];
+function firstEnv(...names) {
+  for (const name of names) {
+    const value = process.env[name];
 
-  if (!value) {
-    throw new Error(`${name} is not set.`);
+    if (value) {
+      return value;
+    }
   }
 
-  return value;
+  throw new Error(`Missing environment variable. Set one of: ${names.join(", ")}`);
 }
 
 function connectionStringWithSslMode(connectionString) {
@@ -111,9 +113,11 @@ async function findAuthUserByEmail(supabase, email) {
 }
 
 async function main() {
-  const databaseUrl = requiredEnv("DATABASE_URL");
-  const supabaseUrl = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const databaseUrl = firstEnv("POSTGRES_PRISMA_URL");
+  const supabaseUrl = firstEnv("SUPABASE_URL");
+  const serviceRoleKey = firstEnv(
+    "SUPABASE_SERVICE_ROLE_KEY",
+  );
   const { email, name, password } = await getAdminInput();
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -146,6 +150,16 @@ async function main() {
 
       authUser = data.user;
       createdAuthUser = true;
+    } else {
+      const { error } = await supabase.auth.admin.updateUserById(authUser.id, {
+        password,
+        email_confirm: true,
+        user_metadata: { ...(authUser.user_metadata ?? {}), name },
+      });
+
+      if (error) {
+        throw error;
+      }
     }
 
     const user = await prisma.user.upsert({
@@ -200,7 +214,7 @@ async function main() {
     console.log(
       createdAuthUser
         ? `Created admin account for ${email}.`
-        : `Granted ADMIN role to the existing auth user ${email}. Password was not changed.`,
+        : `Reset password and granted ADMIN role to the existing auth user ${email}.`,
     );
   } finally {
     await prisma.$disconnect();

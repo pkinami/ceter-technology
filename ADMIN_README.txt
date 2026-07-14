@@ -11,10 +11,11 @@ Quick Start
    npm install
 
 2. Confirm environment variables are present:
-   NEXT_PUBLIC_SUPABASE_URL
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-   DATABASE_URL
-   DIRECT_URL
+   POSTGRES_PRISMA_URL
+   POSTGRES_URL_NON_POOLING
+   SUPABASE_URL
+   SUPABASE_SERVICE_ROLE_KEY
+   SUPABASE_PUBLISHABLE_KEY
 
 3. Generate Prisma Client:
    npx prisma generate
@@ -27,6 +28,10 @@ Quick Start
 
 6. Create or confirm an admin user:
    npm run setup:admin
+
+   To reset an existing admin password, run the same command with ADMIN_EMAIL,
+   ADMIN_NAME, and ADMIN_PASSWORD supplied through the shell or Vercel CLI.
+   The script updates Supabase Auth and grants the local Super Admin role.
 
 7. Start the development server:
    npm run dev

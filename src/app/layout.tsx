@@ -6,10 +6,7 @@ import { RouteProgress } from "@/components/layout/route-progress";
 import { AnalyticsScripts } from "@/components/marketing/analytics-scripts";
 import { WhatsAppFloatingButton } from "@/components/marketing/whatsapp-floating-button";
 import { ToastProvider } from "@/components/ui/toast";
-import { validateProductionEnv } from "@/lib/env";
 import "./globals.css";
-
-validateProductionEnv();
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cetertechnology.com"),

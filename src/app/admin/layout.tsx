@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   Boxes,
   ClipboardList,
@@ -27,6 +28,8 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
+
   const admin = await requireAdmin();
 
   return (

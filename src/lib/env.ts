@@ -1,22 +1,46 @@
-const requiredProductionEnv = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "DATABASE_URL",
-  "DIRECT_URL",
-  "SERPAPI_KEY",
-  "CLOUDINARY_CLOUD_NAME",
-  "CLOUDINARY_API_KEY",
-  "CLOUDINARY_API_SECRET",
-] as const;
+import { logServerError } from "./server-logging";
 
-export function validateProductionEnv() {
-  if (process.env.NODE_ENV !== "production") {
-    return;
+export function firstEnv(...names: string[]) {
+  for (const name of names) {
+    const value = process.env[name];
+
+    if (value) {
+      return value;
+    }
   }
 
-  const missing = requiredProductionEnv.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    throw new Error(`Missing production environment variables: ${missing.join(", ")}`);
-  }
+  return undefined;
 }
+
+export function requireFirstEnv(...names: string[]) {
+  const value = firstEnv(...names);
+
+  if (!value) {
+    const error = new Error(`Missing environment variable. Set one of: ${names.join(", ")}`);
+    logServerError("environment.missing", error, { names });
+    throw error;
+  }
+
+  return value;
+}
+
+export const databaseEnv = {
+  pooledUrlNames: ["POSTGRES_PRISMA_URL"],
+  directUrlNames: ["POSTGRES_URL_NON_POOLING"],
+} as const;
+
+export const supabaseEnv = {
+  serverUrlNames: ["SUPABASE_URL"],
+  publicUrlNames: [
+    "NEXT_PUBLIC_SUPABASE_URL",
+  ],
+  publicKeyNames: [
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  ],
+  serverClientKeyNames: [
+    "SUPABASE_PUBLISHABLE_KEY",
+  ],
+  serviceRoleKeyNames: [
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ],
+} as const;

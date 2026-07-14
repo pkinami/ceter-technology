@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node prisma/seed.mjs",
-    "setup:admin": "node scripts/create-admin.mjs"
+    "setup:admin": "node scripts/create-admin.mjs",
+    "audit:prod": "node scripts/production-runtime-audit.mjs",
+    "setup:prod": "node scripts/production-setup.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
