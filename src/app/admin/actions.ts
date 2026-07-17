@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { logAudit, requirePermission } from "@/lib/rbac";
 import {
   MEDIA_BUCKETS,
@@ -214,6 +215,31 @@ function assertProductStatus(value: string) {
   return value as (typeof productStatuses)[number];
 }
 
+function productWhereFromForm(formData: FormData): Prisma.ProductWhereInput {
+  const q = optionalString(formData, "q");
+  const status = optionalString(formData, "filterStatus");
+  const categoryId = optionalString(formData, "categoryId");
+  const brand = optionalString(formData, "brand");
+
+  return {
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { slug: { contains: q, mode: "insensitive" } },
+            { sku: { contains: q, mode: "insensitive" } },
+            { brand: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(status && productStatuses.includes(status as (typeof productStatuses)[number])
+      ? { status: status as (typeof productStatuses)[number] }
+      : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(brand ? { brand } : {}),
+  };
+}
+
 function assertOrderStatus(value: string) {
   if (!orderStatuses.includes(value as (typeof orderStatuses)[number])) {
     throw new Error("Invalid order status.");
@@ -325,9 +351,15 @@ function externalMediaData(url: string, productId?: string | null) {
 }
 
 function productFolderFromForm(formData: FormData) {
-  const value = formData.get("imageFolder");
+  const value = optionalString(formData, "imageFolder");
 
-  if (value === "accessories" || value === "office-equipment" || value === "printers") {
+  if (
+    value === "accessories" ||
+    value === "office-equipment" ||
+    value === "printers" ||
+    value === "ict" ||
+    value === "consumables"
+  ) {
     return value;
   }
 
@@ -409,6 +441,11 @@ function revalidateAdmin() {
   revalidatePath("/admin/orders");
   revalidatePath("/admin/customers");
   revalidatePath("/admin/homepage");
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/pricing");
+  revalidatePath("/admin/suppliers");
+  revalidatePath("/admin/brands");
+  revalidatePath("/admin/reports");
 }
 
 function revalidateHomepage() {
@@ -761,6 +798,9 @@ export async function createCategory(formData: FormData) {
       slug,
       description: optionalString(formData, "description"),
       parentId: optionalString(formData, "parentId"),
+      sortOrder: Number(optionalString(formData, "sortOrder") ?? 0),
+      seoTitle: optionalString(formData, "seoTitle"),
+      seoDescription: optionalString(formData, "seoDescription"),
     },
   });
 
@@ -786,6 +826,9 @@ export async function updateCategory(formData: FormData) {
       slug: await uniqueSlug("category", optionalString(formData, "slug") ?? name, categoryId),
       description: optionalString(formData, "description"),
       parentId,
+      sortOrder: Number(optionalString(formData, "sortOrder") ?? 0),
+      seoTitle: optionalString(formData, "seoTitle"),
+      seoDescription: optionalString(formData, "seoDescription"),
     },
   });
 
@@ -839,14 +882,21 @@ export async function createProduct(formData: FormData) {
       name,
       slug: await uniqueSlug("product", optionalString(formData, "slug") ?? name),
       description: requiredString(formData, "description"),
+      sku: optionalString(formData, "sku"),
       brand: optionalString(formData, "brand") ?? "",
+      costPrice: optionalString(formData, "costPrice"),
       price: requiredString(formData, "price"),
       discountPrice: optionalString(formData, "discountPrice"),
+      taxRate: optionalString(formData, "taxRate") ?? "16",
       stock: requiredNumber(formData, "stock"),
       lowStockThreshold: requiredNumber(formData, "lowStockThreshold"),
+      supplierId: optionalString(formData, "supplierId"),
+      warehouseLocation: optionalString(formData, "warehouseLocation"),
       status: assertProductStatus(requiredString(formData, "status")),
       badges: badgesFromForm(formData),
       imageUrl,
+      imageFolder: optionalString(formData, "imageFolder"),
+      homepagePlacement: optionalString(formData, "homepagePlacement"),
       specifications: parseSpecifications(optionalString(formData, "specifications")),
       categoryId: requiredString(formData, "categoryId"),
       media: {
@@ -907,14 +957,21 @@ export async function updateProduct(formData: FormData) {
       name,
       slug: await uniqueSlug("product", optionalString(formData, "slug") ?? name, productId),
       description: requiredString(formData, "description"),
+      sku: optionalString(formData, "sku"),
       brand: optionalString(formData, "brand") ?? "",
+      costPrice: optionalString(formData, "costPrice"),
       price: requiredString(formData, "price"),
       discountPrice: optionalString(formData, "discountPrice"),
+      taxRate: optionalString(formData, "taxRate") ?? "16",
       stock: requiredNumber(formData, "stock"),
       lowStockThreshold: requiredNumber(formData, "lowStockThreshold"),
+      supplierId: optionalString(formData, "supplierId"),
+      warehouseLocation: optionalString(formData, "warehouseLocation"),
       status: assertProductStatus(requiredString(formData, "status")),
       badges: badgesFromForm(formData),
       imageUrl,
+      imageFolder: optionalString(formData, "imageFolder"),
+      homepagePlacement: optionalString(formData, "homepagePlacement"),
       specifications: parseSpecifications(optionalString(formData, "specifications")),
       categoryId: requiredString(formData, "categoryId"),
       ...(newManualMainImage || galleryUrls.length > 0
@@ -1032,6 +1089,66 @@ export async function deleteProduct(formData: FormData) {
   revalidateCatalogue(product.slug);
 }
 
+export async function duplicateProduct(formData: FormData) {
+  const admin = await requirePermission("PRODUCTS", "CREATE");
+  const productId = requiredString(formData, "productId");
+  const source = await prisma.product.findUniqueOrThrow({
+    where: { id: productId },
+    include: { media: true },
+  });
+  const product = await prisma.product.create({
+    data: {
+      name: `${source.name} Copy`,
+      slug: await uniqueSlug("product", `${source.slug}-copy`),
+      description: source.description,
+      sku: source.sku ? `${source.sku}-COPY` : null,
+      brand: source.brand,
+      costPrice: source.costPrice,
+      price: source.price,
+      discountPrice: source.discountPrice,
+      taxRate: source.taxRate,
+      stock: 0,
+      lowStockThreshold: source.lowStockThreshold,
+      supplierId: source.supplierId,
+      warehouseLocation: source.warehouseLocation,
+      status: "DRAFT",
+      badges: [],
+      imageUrl: source.imageUrl,
+      imageFolder: source.imageFolder,
+      homepagePlacement: source.homepagePlacement,
+      ...(source.specifications ? { specifications: source.specifications as Prisma.InputJsonValue } : {}),
+      categoryId: source.categoryId,
+      media: {
+        create: source.media.map((item) => ({
+          url: item.url,
+          fileName: item.fileName,
+          fileType: item.fileType,
+          fileSize: item.fileSize,
+          storagePath: item.storagePath,
+          type: item.type,
+        })),
+      },
+    },
+  });
+
+  await logAdminAction(admin.id, `Duplicated product: ${source.name}`);
+  revalidateAdmin();
+  revalidateCatalogue(product.slug);
+}
+
+export async function archiveProduct(formData: FormData) {
+  const admin = await requirePermission("PRODUCTS", "EDIT");
+  const productId = requiredString(formData, "productId");
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: { status: "DRAFT", badges: [] },
+  });
+
+  await logAdminAction(admin.id, `Archived product: ${product.name}`);
+  revalidateAdmin();
+  revalidateCatalogue(product.slug);
+}
+
 export async function updateOrderStatus(formData: FormData) {
   const admin = await requirePermission("ORDERS", "UPDATE_STATUS");
   const orderId = requiredString(formData, "orderId");
@@ -1103,16 +1220,23 @@ export async function createMarketingCampaign(formData: FormData) {
   const productIds = formData
     .getAll("productIds")
     .filter((value): value is string => typeof value === "string" && value.trim() !== "");
+  const categoryIds = formData
+    .getAll("categoryIds")
+    .filter((value): value is string => typeof value === "string" && value.trim() !== "");
 
   const campaign = await prisma.marketingCampaign.create({
     data: {
       name: requiredString(formData, "name"),
+      campaignType: optionalString(formData, "campaignType") ?? "PRODUCT_PROMOTION",
       discountPercentage: Math.min(100, requiredNumber(formData, "discountPercentage")),
       status: assertCampaignStatus(requiredString(formData, "status")),
       startsAt: requiredDate(formData, "startsAt"),
       endsAt: requiredDate(formData, "endsAt"),
       products: {
         create: productIds.map((productId) => ({ productId })),
+      },
+      categories: {
+        create: categoryIds.map((categoryId) => ({ categoryId })),
       },
     },
   });
@@ -1144,6 +1268,37 @@ export async function createCoupon(formData: FormData) {
   });
 
   await logAdminAction(admin.id, `Created coupon: ${coupon.code}`);
+  revalidateAdmin();
+}
+
+export async function deleteMarketingCampaign(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const campaign = await prisma.marketingCampaign.delete({
+    where: { id: requiredString(formData, "campaignId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted marketing campaign: ${campaign.name}`);
+  revalidateAdmin();
+  revalidateCatalogue();
+}
+
+export async function deleteCoupon(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const coupon = await prisma.coupon.delete({
+    where: { id: requiredString(formData, "couponId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted coupon: ${coupon.code}`);
+  revalidateAdmin();
+}
+
+export async function deleteNewsletterSubscriber(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const subscriber = await prisma.newsletterSubscriber.delete({
+    where: { id: requiredString(formData, "subscriberId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted newsletter subscriber: ${subscriber.email}`);
   revalidateAdmin();
 }
 
@@ -1195,6 +1350,16 @@ export async function updateHomepageBanner(formData: FormData) {
   revalidateHomepage();
 }
 
+export async function deleteHomepageBanner(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const banner = await prisma.homepageBanner.delete({
+    where: { id: requiredString(formData, "bannerId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted homepage banner: ${banner.title}`);
+  revalidateHomepage();
+}
+
 export async function createPromotion(formData: FormData) {
   const admin = await requirePermission("MARKETING", "MANAGE");
   const uploadedImage = await uploadWebsiteImageFromForm(formData, "image", "promotions");
@@ -1240,6 +1405,16 @@ export async function updatePromotion(formData: FormData) {
   revalidateHomepage();
 }
 
+export async function deletePromotion(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const promotion = await prisma.promotion.delete({
+    where: { id: requiredString(formData, "promotionId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted homepage promotion: ${promotion.title}`);
+  revalidateHomepage();
+}
+
 export async function createBrand(formData: FormData) {
   const admin = await requirePermission("MARKETING", "MANAGE");
   const uploadedImage = await uploadWebsiteImageFromForm(formData, "logo", "brands");
@@ -1274,6 +1449,16 @@ export async function updateBrand(formData: FormData) {
   });
 
   await logAdminAction(admin.id, `Updated homepage brand: ${brand.name}`);
+  revalidateHomepage();
+}
+
+export async function deleteBrand(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const brand = await prisma.brand.delete({
+    where: { id: requiredString(formData, "brandId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted homepage brand: ${brand.name}`);
   revalidateHomepage();
 }
 
@@ -1318,6 +1503,16 @@ export async function updateIndustrySolution(formData: FormData) {
   revalidateHomepage();
 }
 
+export async function deleteIndustrySolution(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const solution = await prisma.industrySolution.delete({
+    where: { id: requiredString(formData, "solutionId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted industry solution: ${solution.title}`);
+  revalidateHomepage();
+}
+
 export async function createService(formData: FormData) {
   const admin = await requirePermission("MARKETING", "MANAGE");
   const service = await prisma.service.create({
@@ -1351,6 +1546,16 @@ export async function updateService(formData: FormData) {
   });
 
   await logAdminAction(admin.id, `Updated homepage service: ${service.title}`);
+  revalidateHomepage();
+}
+
+export async function deleteService(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const service = await prisma.service.delete({
+    where: { id: requiredString(formData, "serviceId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted homepage service: ${service.title}`);
   revalidateHomepage();
 }
 
@@ -1390,6 +1595,16 @@ export async function updateTestimonial(formData: FormData) {
   revalidateHomepage();
 }
 
+export async function deleteTestimonial(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const testimonial = await prisma.testimonial.delete({
+    where: { id: requiredString(formData, "testimonialId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted testimonial: ${testimonial.customer}`);
+  revalidateHomepage();
+}
+
 export async function updateQuoteRequestStatus(formData: FormData) {
   const admin = await requirePermission("MARKETING", "MANAGE");
   const quoteRequest = await prisma.quoteRequest.update({
@@ -1400,6 +1615,16 @@ export async function updateQuoteRequestStatus(formData: FormData) {
   });
 
   await logAdminAction(admin.id, `Updated quote request from: ${quoteRequest.name}`);
+  revalidateHomepage();
+}
+
+export async function deleteQuoteRequest(formData: FormData) {
+  const admin = await requirePermission("MARKETING", "MANAGE");
+  const quoteRequest = await prisma.quoteRequest.delete({
+    where: { id: requiredString(formData, "quoteRequestId") },
+  });
+
+  await logAdminAction(admin.id, `Deleted quote request from: ${quoteRequest.name}`);
   revalidateHomepage();
 }
 
@@ -1419,10 +1644,21 @@ export async function updateLowStockThreshold(formData: FormData) {
 
 export async function bulkUpdateProducts(formData: FormData) {
   const admin = await requirePermission("PRODUCTS", "BULK");
-  const productIds = formData
+  let productIds = formData
     .getAll("productIds")
     .filter((value): value is string => typeof value === "string" && value.trim() !== "");
   const operation = requiredString(formData, "operation");
+  const where = formData.get("selectionMode") === "allFiltered"
+    ? productWhereFromForm(formData)
+    : { id: { in: productIds } };
+
+  if (formData.get("selectionMode") === "allFiltered") {
+    const products = await prisma.product.findMany({
+      where,
+      select: { id: true },
+    });
+    productIds = products.map((product) => product.id);
+  }
 
   if (productIds.length === 0) {
     throw new Error("Select at least one product.");

@@ -3,16 +3,20 @@ import { requirePermission } from "@/lib/rbac";
 import {
   type CategoryImportRow,
   type ImportKind,
+  type PriceUpdateImportRow,
   type ProductImportRow,
+  type StockUpdateImportRow,
   normalizeImportRows,
   previewCategoryImport,
+  previewPriceUpdateImport,
   previewProductImport,
+  previewStockUpdateImport,
 } from "@/lib/imports";
 
 const allowedExtensions = [".xlsx", ".csv"];
 
 function isImportKind(value: FormDataEntryValue | null): value is ImportKind {
-  return value === "products" || value === "categories";
+  return value === "products" || value === "categories" || value === "price-updates" || value === "stock-updates";
 }
 
 function validateFile(file: FormDataEntryValue | null) {
@@ -51,7 +55,11 @@ export async function POST(request: NextRequest) {
     const preview =
       kind === "products"
         ? await previewProductImport(file.name, rows as ProductImportRow[])
-        : await previewCategoryImport(file.name, rows as CategoryImportRow[]);
+        : kind === "categories"
+          ? await previewCategoryImport(file.name, rows as CategoryImportRow[])
+          : kind === "price-updates"
+            ? await previewPriceUpdateImport(file.name, rows as PriceUpdateImportRow[])
+            : await previewStockUpdateImport(file.name, rows as StockUpdateImportRow[]);
 
     return NextResponse.json({ ok: true, preview });
   } catch (error) {

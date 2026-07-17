@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Building2, ImageIcon, Megaphone, MessageSquareQuote, ShieldCheck, Star, Wrench } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { DeleteButton } from "../delete-button";
 import { formatDate } from "../utils";
 import {
   createBrand,
@@ -9,6 +10,13 @@ import {
   createPromotion,
   createService,
   createTestimonial,
+  deleteBrand,
+  deleteHomepageBanner,
+  deleteIndustrySolution,
+  deletePromotion,
+  deleteQuoteRequest,
+  deleteService,
+  deleteTestimonial,
   updateBrand,
   updateHomepageBanner,
   updateIndustrySolution,
@@ -186,6 +194,7 @@ export default async function AdminHomepagePage() {
                       Active
                     </label>
                     <button className={buttonClass}>Update</button>
+                    <DeleteButton formAction={deleteHomepageBanner} name="bannerId" value={banner.id} label={banner.title} />
                   </div>
                 </form>
               ))}
@@ -225,6 +234,7 @@ export default async function AdminHomepagePage() {
                         Active
                       </label>
                       <button className={buttonClass}>Save</button>
+                      <DeleteButton formAction={deleteBrand} name="brandId" value={brand.id} label={brand.name} />
                     </div>
                   </form>
                 ))}
@@ -265,6 +275,7 @@ export default async function AdminHomepagePage() {
                         Active
                       </label>
                       <button className={buttonClass}>Save</button>
+                      <DeleteButton formAction={deleteIndustrySolution} name="solutionId" value={solution.id} label={solution.title} />
                     </div>
                   </form>
                 ))}
@@ -304,6 +315,7 @@ export default async function AdminHomepagePage() {
                         Active
                       </label>
                       <button className={buttonClass}>Save</button>
+                      <DeleteButton formAction={deleteService} name="serviceId" value={service.id} label={service.title} />
                     </div>
                   </form>
                 ))}
@@ -341,6 +353,7 @@ export default async function AdminHomepagePage() {
                         Active
                       </label>
                       <button className={buttonClass}>Save</button>
+                      <DeleteButton formAction={deleteTestimonial} name="testimonialId" value={testimonial.id} label={testimonial.customer} />
                     </div>
                   </form>
                 ))}
@@ -389,6 +402,7 @@ export default async function AdminHomepagePage() {
                             <option value="CLOSED">Closed</option>
                           </select>
                           <button className={buttonClass}>Save</button>
+                          <DeleteButton formAction={deleteQuoteRequest} name="quoteRequestId" value={request.id} label={`quote request from ${request.name}`} />
                         </form>
                       </td>
                     </tr>
@@ -422,6 +436,7 @@ export default async function AdminHomepagePage() {
                       Enabled
                     </label>
                     <button className={buttonClass}>Update</button>
+                    <DeleteButton formAction={deletePromotion} name="promotionId" value={promotion.id} label={promotion.title} />
                   </div>
                 </form>
               ))}

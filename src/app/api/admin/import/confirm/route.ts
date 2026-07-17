@@ -4,14 +4,18 @@ import { requirePermission } from "@/lib/rbac";
 import {
   type CategoryImportRow,
   type ImportKind,
+  type PriceUpdateImportRow,
   type ProductImportRow,
+  type StockUpdateImportRow,
   importCategories,
+  importPriceUpdates,
   importProducts,
+  importStockUpdates,
 } from "@/lib/imports";
 import { prisma } from "@/lib/prisma";
 
 function isImportKind(value: unknown): value is ImportKind {
-  return value === "products" || value === "categories";
+  return value === "products" || value === "categories" || value === "price-updates" || value === "stock-updates";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -32,7 +36,11 @@ export async function POST(request: NextRequest) {
     const result =
       body.kind === "products"
         ? await importProducts(admin.id, fileName, body.rows as ProductImportRow[])
-        : await importCategories(admin.id, fileName, body.rows as CategoryImportRow[]);
+        : body.kind === "categories"
+          ? await importCategories(admin.id, fileName, body.rows as CategoryImportRow[])
+          : body.kind === "price-updates"
+            ? await importPriceUpdates(admin.id, fileName, body.rows as PriceUpdateImportRow[])
+            : await importStockUpdates(admin.id, fileName, body.rows as StockUpdateImportRow[]);
 
     await prisma.adminLog.create({
       data: {
@@ -47,6 +55,8 @@ export async function POST(request: NextRequest) {
     revalidatePath("/admin/import");
     revalidatePath("/admin/products");
     revalidatePath("/admin/categories");
+    revalidatePath("/admin/pricing");
+    revalidatePath("/admin/inventory");
 
     return NextResponse.json({ ok: true, result });
   } catch (error) {

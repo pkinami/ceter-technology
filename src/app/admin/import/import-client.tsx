@@ -32,6 +32,8 @@ export function ImportClient({ recentImports }: { recentImports: RecentImport[] 
   const [states, setStates] = useState<Record<ImportKind, ImportState>>({
     products: emptyState,
     categories: emptyState,
+    "price-updates": emptyState,
+    "stock-updates": emptyState,
   });
 
   async function previewImport(kind: ImportKind, formData: FormData) {
@@ -113,6 +115,26 @@ export function ImportClient({ recentImports }: { recentImports: RecentImport[] 
           onConfirm={confirmImport}
           onCancel={() => setStates((current) => ({ ...current, categories: emptyState }))}
         />
+        <ImportPanel
+          kind="price-updates"
+          title="Import Price Updates"
+          templateHref="/api/admin/import/template/price-updates"
+          templateLabel="Download Price Update Template"
+          state={states["price-updates"]}
+          onPreview={previewImport}
+          onConfirm={confirmImport}
+          onCancel={() => setStates((current) => ({ ...current, "price-updates": emptyState }))}
+        />
+        <ImportPanel
+          kind="stock-updates"
+          title="Import Stock Updates"
+          templateHref="/api/admin/import/template/stock-updates"
+          templateLabel="Download Stock Update Template"
+          state={states["stock-updates"]}
+          onPreview={previewImport}
+          onConfirm={confirmImport}
+          onCancel={() => setStates((current) => ({ ...current, "stock-updates": emptyState }))}
+        />
       </div>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -184,7 +206,14 @@ function ImportPanel({
 }) {
   const readyLabel = useMemo(() => {
     const count = state.preview?.validRows ?? 0;
-    const noun = kind === "products" ? "products" : "categories";
+    const noun =
+      kind === "products"
+        ? "products"
+        : kind === "categories"
+          ? "categories"
+          : kind === "price-updates"
+            ? "price updates"
+            : "stock updates";
     return `${count} ${noun} ready to import`;
   }, [kind, state.preview?.validRows]);
 
@@ -268,7 +297,7 @@ function ImportPanel({
               onClick={() => onConfirm(kind)}
               className="inline-flex min-h-10 items-center rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              Import {kind === "products" ? "Products" : "Categories"}
+              Import {kind === "products" ? "Products" : kind === "categories" ? "Categories" : kind === "price-updates" ? "Price Updates" : "Stock Updates"}
             </button>
           </div>
         </div>

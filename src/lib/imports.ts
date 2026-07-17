@@ -1,7 +1,7 @@
 import type { InputJsonValue } from "@prisma/client/runtime/client.js";
 import { prisma } from "@/lib/prisma";
 
-export type ImportKind = "products" | "categories";
+export type ImportKind = "products" | "categories" | "price-updates" | "stock-updates";
 
 export type ImportIssue = {
   row: number;
@@ -37,6 +37,24 @@ export type CategoryImportRow = {
   description: string;
 };
 
+export type PriceUpdateImportRow = {
+  sku: string;
+  slug: string;
+  productName: string;
+  price: string;
+  discountPrice: string;
+  reason: string;
+};
+
+export type StockUpdateImportRow = {
+  sku: string;
+  slug: string;
+  productName: string;
+  stockQuantity: string;
+  lowStockThreshold: string;
+  reason: string;
+};
+
 export type ImportPreview =
   | {
       kind: "products";
@@ -56,6 +74,26 @@ export type ImportPreview =
       errorRows: number;
       duplicateRecords: number;
       rows: CategoryImportRow[];
+      errors: ImportIssue[];
+    }
+  | {
+      kind: "price-updates";
+      fileName: string;
+      totalRows: number;
+      validRows: number;
+      errorRows: number;
+      duplicateRecords: number;
+      rows: PriceUpdateImportRow[];
+      errors: ImportIssue[];
+    }
+  | {
+      kind: "stock-updates";
+      fileName: string;
+      totalRows: number;
+      validRows: number;
+      errorRows: number;
+      duplicateRecords: number;
+      rows: StockUpdateImportRow[];
       errors: ImportIssue[];
     };
 
@@ -95,7 +133,25 @@ export const categoryTemplateHeaders = [
   "Description",
 ];
 
-const productStatuses = ["ACTIVE", "OUT_OF_STOCK", "DRAFT"] as const;
+export const priceUpdateTemplateHeaders = [
+  "SKU",
+  "Slug",
+  "Product Name",
+  "Price",
+  "Discount Price",
+  "Reason",
+];
+
+export const stockUpdateTemplateHeaders = [
+  "SKU",
+  "Slug",
+  "Product Name",
+  "Stock Quantity",
+  "Low Stock Threshold",
+  "Reason",
+];
+
+const productStatuses = ["ACTIVE", "OUT_OF_STOCK", "DRAFT", "NEEDS_ATTENTION"] as const;
 type ProductBadgeImport = "FEATURED" | "NEW_ARRIVAL" | "BEST_SELLER" | "PROMOTION";
 
 function cell(row: Record<string, unknown>, ...keys: string[]) {
@@ -215,10 +271,95 @@ function categoryRow(raw: Record<string, unknown>): CategoryImportRow {
   };
 }
 
+function priceUpdateRow(raw: Record<string, unknown>): PriceUpdateImportRow {
+  return {
+    sku: cell(raw, "SKU", "Sku"),
+    slug: cell(raw, "Slug"),
+    productName: cell(raw, "Product Name", "Name"),
+    price: cell(raw, "Price", "New Price"),
+    discountPrice: cell(raw, "Discount Price"),
+    reason: cell(raw, "Reason"),
+  };
+}
+
+function stockUpdateRow(raw: Record<string, unknown>): StockUpdateImportRow {
+  return {
+    sku: cell(raw, "SKU", "Sku"),
+    slug: cell(raw, "Slug"),
+    productName: cell(raw, "Product Name", "Name"),
+    stockQuantity: cell(raw, "Stock Quantity", "Stock"),
+    lowStockThreshold: cell(raw, "Low Stock Threshold"),
+    reason: cell(raw, "Reason"),
+  };
+}
+
 export function normalizeImportRows(kind: ImportKind, rawRows: Record<string, unknown>[]) {
   return rawRows
-    .map((row) => (kind === "products" ? productRow(row) : categoryRow(row)))
+    .map((row) => {
+      if (kind === "products") return productRow(row);
+      if (kind === "categories") return categoryRow(row);
+      if (kind === "price-updates") return priceUpdateRow(row);
+      return stockUpdateRow(row);
+    })
     .filter((row) => Object.values(row).some((value) => value.trim() !== ""));
+}
+
+async function previewUpdateImport(
+  kind: "price-updates" | "stock-updates",
+  fileName: string,
+  rows: Array<PriceUpdateImportRow | StockUpdateImportRow>,
+): Promise<ImportPreview> {
+  const products = await prisma.product.findMany({ select: { id: true, name: true, slug: true, sku: true } });
+  const productKeys = new Set(products.flatMap((product) => [product.name.toLowerCase(), product.slug.toLowerCase(), product.sku?.toLowerCase()].filter(Boolean) as string[]));
+  const seen = new Set<string>();
+  let duplicateRecords = 0;
+  const errors: ImportIssue[] = [];
+
+  rows.forEach((row, index) => {
+    const rowErrors: string[] = [];
+    const identifier = row.sku || row.slug || row.productName || `Row ${index + 2}`;
+    const lookup = [row.sku, row.slug, row.productName].find(Boolean)?.toLowerCase() ?? "";
+    if (!lookup) rowErrors.push("SKU, Slug, or Product Name is required.");
+    if (lookup && !productKeys.has(lookup)) rowErrors.push(`Product "${identifier}" does not exist.`);
+    if (seen.has(lookup)) {
+      duplicateRecords += 1;
+      rowErrors.push("Duplicate update row.");
+    }
+    seen.add(lookup);
+
+    if (kind === "price-updates") {
+      const price = numberValue((row as PriceUpdateImportRow).price);
+      const discountPrice = numberValue((row as PriceUpdateImportRow).discountPrice);
+      if (price === null || price < 0) rowErrors.push("Price must be a valid non-negative number.");
+      if (discountPrice !== null && discountPrice < 0) rowErrors.push("Discount Price must be a valid non-negative number.");
+    } else {
+      const stock = integerValue((row as StockUpdateImportRow).stockQuantity);
+      const threshold = integerValue((row as StockUpdateImportRow).lowStockThreshold || "5");
+      if (stock === null || stock < 0) rowErrors.push("Stock Quantity must be a valid non-negative whole number.");
+      if (threshold === null || threshold < 0) rowErrors.push("Low Stock Threshold must be a valid non-negative whole number.");
+    }
+
+    if (rowErrors.length > 0) errors.push({ row: index + 2, identifier, errors: rowErrors });
+  });
+
+  return {
+    kind,
+    fileName,
+    totalRows: rows.length,
+    validRows: rows.length - errors.length,
+    errorRows: errors.length,
+    duplicateRecords,
+    rows: rows as never,
+    errors,
+  };
+}
+
+export function previewPriceUpdateImport(fileName: string, rows: PriceUpdateImportRow[]) {
+  return previewUpdateImport("price-updates", fileName, rows);
+}
+
+export function previewStockUpdateImport(fileName: string, rows: StockUpdateImportRow[]) {
+  return previewUpdateImport("stock-updates", fileName, rows);
 }
 
 export async function previewProductImport(fileName: string, rows: ProductImportRow[]): Promise<ImportPreview> {
@@ -253,7 +394,7 @@ export async function previewProductImport(fileName: string, rows: ProductImport
     if (stock === null || stock < 0) rowErrors.push("Stock Quantity must be a valid non-negative whole number.");
     if (threshold === null || threshold < 0) rowErrors.push("Low Stock Threshold must be a valid non-negative whole number.");
     if (row.category && !categoryKeys.has(row.category.toLowerCase())) rowErrors.push(`Category "${row.category}" does not exist.`);
-    if (!productStatuses.includes(status as (typeof productStatuses)[number])) rowErrors.push("Status must be ACTIVE, OUT_OF_STOCK, or DRAFT.");
+    if (!productStatuses.includes(status as (typeof productStatuses)[number])) rowErrors.push("Status must be ACTIVE, OUT_OF_STOCK, NEEDS_ATTENTION, or DRAFT.");
 
     const duplicateKey = `${nameKey}|${slugKey}`;
     if (existingProductKeys.has(nameKey) || existingProductKeys.has(slugKey) || seen.has(duplicateKey)) {
@@ -445,6 +586,90 @@ export async function importProducts(adminId: string, fileName: string, rows: Pr
   }
 
   const history = await createImportHistory(adminId, "products", fileName, rows.length, imported, errors);
+  return { imported, failed: rows.length - imported, totalRows: rows.length, errors, historyId: history.id };
+}
+
+function productLookupWhere(row: { sku: string; slug: string; productName: string }) {
+  return {
+    OR: [
+      ...(row.sku ? [{ sku: row.sku }] : []),
+      ...(row.slug ? [{ slug: row.slug }] : []),
+      ...(row.productName ? [{ name: row.productName }] : []),
+    ],
+  };
+}
+
+export async function importPriceUpdates(adminId: string, fileName: string, rows: PriceUpdateImportRow[]): Promise<ImportResult> {
+  const preview = await previewPriceUpdateImport(fileName, rows);
+  const invalidRows = new Set(preview.errors.map((error) => error.row));
+  const errors = [...preview.errors];
+  let imported = 0;
+
+  for (const [index, row] of rows.entries()) {
+    if (invalidRows.has(index + 2)) continue;
+    try {
+      const product = await prisma.product.findFirstOrThrow({ where: productLookupWhere(row) });
+      const previousPrice = product.price;
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          price: Number(row.price).toFixed(2),
+          discountPrice: row.discountPrice ? Number(row.discountPrice).toFixed(2) : null,
+        },
+      });
+      await prisma.priceHistory.create({
+        data: {
+          productId: product.id,
+          source: "bulk-import",
+          recommendedPrice: Number(row.price).toFixed(2),
+          targetMarginPercent: 0,
+          reason: row.reason || `Bulk price update from ${previousPrice.toString()} to ${Number(row.price).toFixed(2)}`,
+        },
+      });
+      imported += 1;
+    } catch (error) {
+      errors.push({ row: index + 2, identifier: row.sku || row.slug || row.productName, errors: [error instanceof Error ? error.message : "Failed to update price."] });
+    }
+  }
+
+  const history = await createImportHistory(adminId, "price-updates", fileName, rows.length, imported, errors);
+  return { imported, failed: rows.length - imported, totalRows: rows.length, errors, historyId: history.id };
+}
+
+export async function importStockUpdates(adminId: string, fileName: string, rows: StockUpdateImportRow[]): Promise<ImportResult> {
+  const preview = await previewStockUpdateImport(fileName, rows);
+  const invalidRows = new Set(preview.errors.map((error) => error.row));
+  const errors = [...preview.errors];
+  let imported = 0;
+
+  for (const [index, row] of rows.entries()) {
+    if (invalidRows.has(index + 2)) continue;
+    try {
+      const product = await prisma.product.findFirstOrThrow({ where: productLookupWhere(row) });
+      const nextStock = Number(row.stockQuantity);
+      const change = nextStock - product.stock;
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          stock: nextStock,
+          lowStockThreshold: row.lowStockThreshold ? Number(row.lowStockThreshold) : product.lowStockThreshold,
+          status: nextStock <= 0 ? "OUT_OF_STOCK" : product.status === "OUT_OF_STOCK" ? "ACTIVE" : product.status,
+        },
+      });
+      await prisma.stockMovement.create({
+        data: {
+          productId: product.id,
+          change,
+          reason: row.reason || "Bulk stock update",
+        },
+      });
+      imported += 1;
+    } catch (error) {
+      errors.push({ row: index + 2, identifier: row.sku || row.slug || row.productName, errors: [error instanceof Error ? error.message : "Failed to update stock."] });
+    }
+  }
+
+  const history = await createImportHistory(adminId, "stock-updates", fileName, rows.length, imported, errors);
   return { imported, failed: rows.length - imported, totalRows: rows.length, errors, historyId: history.id };
 }
 

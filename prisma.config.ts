@@ -13,18 +13,7 @@ function getConnectionStringWithSupabaseSsl(connectionString: string) {
 }
 
 function getDirectDatasourceUrl() {
-  const connectionString = process.env.POSTGRES_URL_NON_POOLING;
-  const command = process.argv.find((item) => item === "generate" || item === "validate");
-
-  if (!connectionString && command) {
-    return "postgresql://prisma:prisma@localhost:5432/prisma";
-  }
-
-  if (!connectionString) {
-    return getConnectionStringWithSupabaseSsl(requireFirstEnv(...databaseEnv.directUrlNames));
-  }
-
-  return getConnectionStringWithSupabaseSsl(connectionString);
+  return getConnectionStringWithSupabaseSsl(requireFirstEnv(...databaseEnv.directUrlNames));
 }
 
 export default defineConfig({

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Plus, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
+import { DeleteButton } from "../delete-button";
 import { createAdminRole, deleteCustomRole } from "../actions";
 
 export const metadata: Metadata = {
@@ -61,10 +62,7 @@ export default async function AdminRolesPage() {
                   {!role.isSystem ? (
                     <form action={deleteCustomRole}>
                       <input type="hidden" name="roleId" value={role.id} />
-                      <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </button>
+                      <DeleteButton label={role.name} />
                     </form>
                   ) : null}
                 </div>

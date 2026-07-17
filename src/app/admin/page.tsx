@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import {
-  Boxes,
-  Bot,
   AlertTriangle,
+  BadgePercent,
+  Boxes,
+  CheckCircle2,
   ClipboardList,
   DatabaseZap,
-  Megaphone,
-  PackagePlus,
+  HeartPulse,
   MessageSquareText,
-  Tags,
-  Users,
+  PackageSearch,
+  TrendingUp,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { MarketplaceSyncControl } from "./automation/marketplace-sync-control";
@@ -18,258 +19,205 @@ import { formatDate, money } from "./utils";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description: "Protected admin dashboard for CETER Technology.",
+  description: "CETER Technologies operations centre.",
 };
 
+function sumOrders(orders: Array<{ totalAmount: unknown }>) {
+  return orders.reduce((sum, order) => sum + Number(String(order.totalAmount)), 0);
+}
+
 export default async function AdminPage() {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
   const [
     totalProducts,
-    totalCategories,
-    totalOrders,
-    totalCustomers,
+    activeProducts,
+    outOfStockProducts,
     lowStockProducts,
-    draftProducts,
     pendingOrders,
-    quoteRequests,
+    monthOrders,
     recentOrders,
-    recentLogs,
+    recentEnquiries,
+    activePromotions,
+    latestImport,
+    failedJobs,
+    runningJobs,
+    draftProducts,
   ] = await Promise.all([
     prisma.product.count(),
-    prisma.category.count(),
-    prisma.order.count(),
-    prisma.user.count({ where: { role: "CUSTOMER" } }),
-    prisma.product.count({
-      where: {
-        OR: [{ status: "OUT_OF_STOCK" }, { stock: { lte: 5 } }],
-      },
-    }),
-    prisma.product.count({ where: { status: { in: ["DRAFT", "NEEDS_ATTENTION"] } } }),
+    prisma.product.count({ where: { status: "ACTIVE" } }),
+    prisma.product.count({ where: { OR: [{ status: "OUT_OF_STOCK" }, { stock: { lte: 0 } }] } }),
+    prisma.product.count({ where: { stock: { gt: 0, lte: 5 } } }),
     prisma.order.count({ where: { orderStatus: { in: ["PENDING", "PROCESSING"] } } }),
-    prisma.quoteRequest.count({ where: { status: "NEW" } }),
+    prisma.order.findMany({ where: { createdAt: { gte: monthStart }, paymentStatus: "PAID" }, select: { totalAmount: true } }),
     prisma.order.findMany({
-      select: {
-        id: true,
-        customerName: true,
-        orderNumber: true,
-        totalAmount: true,
-        orderStatus: true,
-        createdAt: true,
-        _count: { select: { items: true } },
-      },
+      select: { id: true, customerName: true, orderNumber: true, totalAmount: true, orderStatus: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+    prisma.quoteRequest.findMany({
+      select: { id: true, name: true, company: true, productInterest: true, status: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
-    prisma.adminLog.findMany({
-      select: {
-        id: true,
-        action: true,
-        timestamp: true,
-        admin: { select: { name: true } },
-      },
-      orderBy: { timestamp: "desc" },
-      take: 5,
+    prisma.marketingCampaign.count({
+      where: { status: "ACTIVE", startsAt: { lte: new Date() }, endsAt: { gte: new Date() } },
     }),
+    prisma.importHistory.findFirst({ include: { admin: { select: { name: true } } }, orderBy: { createdAt: "desc" } }),
+    prisma.automationJob.count({ where: { status: "FAILED" } }),
+    prisma.automationJob.count({ where: { status: { in: ["QUEUED", "RUNNING"] } } }),
+    prisma.product.count({ where: { status: { in: ["DRAFT", "NEEDS_ATTENTION"] } } }),
   ]);
 
-  const metrics = [
-    { label: "Total products", value: totalProducts, icon: Boxes, href: "/admin/products" },
-    { label: "Total categories", value: totalCategories, icon: Tags, href: "/admin/categories" },
-    { label: "Total orders", value: totalOrders, icon: ClipboardList, href: "/admin/orders" },
-    { label: "Total customers", value: totalCustomers, icon: Users, href: "/admin/customers" },
-  ];
-  const priorityMetrics = [
-    { label: "Low stock alerts", value: lowStockProducts, icon: AlertTriangle, href: "/admin/products", tone: "text-red-700 bg-red-50" },
-    { label: "Drafts needing work", value: draftProducts, icon: PackagePlus, href: "/admin/products", tone: "text-amber-700 bg-amber-50" },
-    { label: "Orders to process", value: pendingOrders, icon: ClipboardList, href: "/admin/orders", tone: "text-blue-700 bg-blue-50" },
-    { label: "New quote requests", value: quoteRequests, icon: MessageSquareText, href: "/admin/marketing", tone: "text-emerald-700 bg-emerald-50" },
-  ];
-  const workflows = [
-    { label: "Add product", description: "Create a product, upload images, add specs, stock, price, and badges.", href: "/admin/products", icon: PackagePlus },
-    { label: "Bulk import", description: "Upload catalogue spreadsheets and review import results.", href: "/admin/import", icon: DatabaseZap },
-    { label: "Manage orders", description: "Update status, delivery, notes, customer details, and receipts.", href: "/admin/orders", icon: ClipboardList },
-    { label: "Promotions", description: "Update banners, featured products, discounts, and marketplace campaigns.", href: "/admin/marketing", icon: Megaphone },
-  ];
+  const revenue = sumOrders(monthOrders);
+  const healthIssues = failedJobs + outOfStockProducts + draftProducts;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-lg border border-orange-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-wide text-orange-600">Automation command center</p>
-            <h2 className="mt-1 text-xl font-black text-slate-950">Marketplace product sync</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Start catalogue discovery, enrichment, image collection, price updates, and publishing feedback from the dashboard.
-            </p>
+    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-orange-600">Operations centre</p>
+              <h2 className="text-2xl font-black text-slate-950">Today&apos;s admin priorities</h2>
+              <p className="mt-1 text-sm text-slate-500">Catalogue health, order flow, revenue, imports, promotions, enquiries, and automation status.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <MarketplaceSyncControl />
+              <Link href="/admin/import" className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-bold text-slate-900 hover:bg-slate-50">
+                <DatabaseZap className="h-4 w-4" /> Imports
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <MarketplaceSyncControl />
-            <Link
-              href="/admin/automation"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
-            >
-              <Bot className="h-4 w-4" />
-              Automation
-            </Link>
-            <Link
-              href="/admin/data-sources"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-sm"
-            >
-              <DatabaseZap className="h-4 w-4" />
-              Data sources
-            </Link>
+        </div>
+        <div className={`rounded-md border p-5 shadow-sm ${healthIssues > 0 ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
+          <div className="flex items-center gap-3">
+            <HeartPulse className={healthIssues > 0 ? "h-6 w-6 text-amber-700" : "h-6 w-6 text-emerald-700"} />
+            <div>
+              <p className="text-sm font-black text-slate-950">System health</p>
+              <p className="mt-1 text-sm text-slate-600">{healthIssues > 0 ? `${healthIssues} items need attention` : "No critical catalogue or automation issues"}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {priorityMetrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
-            <Link key={metric.label} href={metric.href} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-0.5 hover:shadow-md">
-              <span className={`inline-grid h-10 w-10 place-items-center rounded-md ${metric.tone}`}>
-                <Icon className="h-5 w-5" />
-              </span>
-              <p className="mt-4 text-sm font-bold text-slate-500">{metric.label}</p>
-              <p className="mt-1 text-3xl font-black text-slate-950">{metric.value}</p>
-            </Link>
-          );
-        })}
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <Metric href="/admin/products" icon={Boxes} label="Total products" value={totalProducts} />
+        <Metric href="/admin/products?status=ACTIVE" icon={CheckCircle2} label="Active products" value={activeProducts} />
+        <Metric href="/admin/inventory" icon={AlertTriangle} label="Out of stock" value={outOfStockProducts} tone="red" />
+        <Metric href="/admin/inventory" icon={PackageSearch} label="Low stock alerts" value={lowStockProducts} tone="amber" />
+        <Metric href="/admin/orders" icon={ClipboardList} label="Pending orders" value={pendingOrders} tone="blue" />
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {workflows.map((workflow) => {
-          const Icon = workflow.icon;
-
-          return (
-            <Link key={workflow.label} href={workflow.href} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-md bg-orange-50 text-orange-600">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h2 className="font-black text-slate-950">{workflow.label}</h2>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{workflow.description}</p>
-            </Link>
-          );
-        })}
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Metric href="/admin/reports" icon={TrendingUp} label="Month revenue" value={money(revenue)} />
+        <Metric href="/admin/marketing" icon={BadgePercent} label="Active promotions" value={activePromotions} />
+        <Metric href="/admin/marketing" icon={MessageSquareText} label="Recent enquiries" value={recentEnquiries.length} />
+        <Metric href="/admin/import" icon={DatabaseZap} label="Import status" value={latestImport ? `${latestImport.importedRecords}/${latestImport.totalRows}` : "None"} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
-            <Link
-              key={metric.label}
-              href={metric.href}
-              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    {metric.label}
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-slate-950">
-                    {metric.value}
-                  </p>
-                </div>
-                <span className="grid h-12 w-12 place-items-center rounded-md bg-orange-50 text-orange-600">
-                  <Icon className="h-6 w-6" />
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Recent orders</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Latest customer orders across the store.
-              </p>
+              <h2 className="text-lg font-black text-slate-950">Recent orders</h2>
+              <p className="mt-1 text-sm text-slate-500">Latest order activity for sales follow-up.</p>
             </div>
-            <Link
-              href="/admin/orders"
-              className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm font-bold text-slate-900 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-sm"
-            >
-              View all
-            </Link>
+            <Link href="/admin/orders" className="rounded-md border border-slate-300 px-3 py-2 text-sm font-bold text-slate-900 hover:bg-slate-50">View all</Link>
           </div>
-
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="py-3 pr-4">Customer</th>
-                  <th className="py-3 pr-4">Order</th>
-                  <th className="py-3 pr-4">Items</th>
-                  <th className="py-3 pr-4">Total</th>
-                  <th className="py-3 pr-4">Status</th>
-                  <th className="py-3">Date</th>
-                </tr>
+                <tr><th className="py-3 pr-4">Customer</th><th className="py-3 pr-4">Order</th><th className="py-3 pr-4">Total</th><th className="py-3 pr-4">Status</th><th className="py-3">Date</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {recentOrders.map((order) => (
                   <tr key={order.id}>
-                    <td className="py-4 pr-4 font-bold text-slate-950">
-                      {order.customerName}
-                    </td>
-                    <td className="py-4 pr-4 text-slate-600">
-                      {order.orderNumber}
-                    </td>
-                    <td className="py-4 pr-4 text-slate-600">
-                      {order._count.items} item{order._count.items === 1 ? "" : "s"}
-                    </td>
-                    <td className="py-4 pr-4 font-bold text-slate-950">
-                      {money(order.totalAmount)}
-                    </td>
-                    <td className="py-4 pr-4">
-                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
-                        {order.orderStatus}
-                      </span>
-                    </td>
+                    <td className="py-4 pr-4 font-bold text-slate-950">{order.customerName}</td>
+                    <td className="py-4 pr-4 text-slate-600">{order.orderNumber}</td>
+                    <td className="py-4 pr-4 font-bold text-slate-950">{money(order.totalAmount)}</td>
+                    <td className="py-4 pr-4"><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{order.orderStatus}</span></td>
                     <td className="py-4 text-slate-500">{formatDate(order.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {recentOrders.length === 0 ? (
-              <p className="py-6 text-sm text-slate-500">No orders yet.</p>
-            ) : null}
           </div>
-        </div>
+        </section>
 
         <aside className="space-y-6">
-          <Link
-            href="/admin/products"
-            className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-orange-950 shadow-sm hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md"
-          >
-            <PackagePlus className="h-6 w-6" />
-            <span className="font-black">Create or update products</span>
-          </Link>
+          <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-950">Actionable alerts</h2>
+            <div className="mt-4 space-y-3">
+              <Alert href="/admin/inventory" label="Restock required" value={`${lowStockProducts + outOfStockProducts} products`} tone="red" />
+              <Alert href="/admin/products?status=NEEDS_ATTENTION" label="Catalogue cleanup" value={`${draftProducts} drafts or review items`} tone="amber" />
+              <Alert href="/admin/automation" label="Automation failures" value={`${failedJobs} failed jobs`} tone="slate" />
+              <Alert href="/admin/automation" label="Running jobs" value={`${runningJobs} queued or running`} tone="blue" />
+            </div>
+          </section>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Admin activity</h2>
-            <div className="mt-5 space-y-4">
-              {recentLogs.map((log) => (
-                <div key={log.id} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                  <p className="text-sm font-bold text-slate-900">{log.action}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {log.admin.name} - {formatDate(log.timestamp)}
-                  </p>
+          <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-950">Recent customer enquiries</h2>
+            <div className="mt-4 space-y-3">
+              {recentEnquiries.map((item) => (
+                <div key={item.id} className="rounded-md bg-slate-50 p-3 text-sm">
+                  <p className="font-bold text-slate-950">{item.name}{item.company ? `, ${item.company}` : ""}</p>
+                  <p className="mt-1 text-slate-600">{item.productInterest || "General enquiry"} - {item.status}</p>
+                  <p className="mt-1 text-xs text-slate-500">{formatDate(item.createdAt)}</p>
                 </div>
               ))}
-              {recentLogs.length === 0 ? (
-                <p className="text-sm text-slate-500">No admin activity yet.</p>
-              ) : null}
+              {recentEnquiries.length === 0 ? <p className="text-sm text-slate-500">No recent enquiries.</p> : null}
             </div>
-          </div>
+          </section>
+
+          <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-950">Latest import</h2>
+            {latestImport ? (
+              <div className="mt-3 text-sm text-slate-600">
+                <p className="font-bold text-slate-950">{latestImport.fileName}</p>
+                <p>{latestImport.type} by {latestImport.admin.name}</p>
+                <p>{latestImport.importedRecords} imported, {latestImport.failedRecords} failed</p>
+                <p className="text-xs text-slate-500">{formatDate(latestImport.createdAt)}</p>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">No import has been run yet.</p>
+            )}
+          </section>
         </aside>
       </div>
     </section>
+  );
+}
+
+function Metric({ href, icon: Icon, label, value, tone = "slate" }: { href: string; icon: LucideIcon; label: string; value: string | number; tone?: "slate" | "red" | "amber" | "blue" }) {
+  const tones = {
+    slate: "text-slate-700 bg-slate-50",
+    red: "text-red-700 bg-red-50",
+    amber: "text-amber-700 bg-amber-50",
+    blue: "text-blue-700 bg-blue-50",
+  };
+  return (
+    <Link href={href} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm hover:-translate-y-0.5 hover:shadow">
+      <span className={`grid h-10 w-10 place-items-center rounded-md ${tones[tone]}`}><Icon className="h-5 w-5" /></span>
+      <p className="mt-3 text-xs font-bold uppercase text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
+    </Link>
+  );
+}
+
+function Alert({ href, label, value, tone }: { href: string; label: string; value: string; tone: "red" | "amber" | "slate" | "blue" }) {
+  const tones = {
+    red: "border-red-200 bg-red-50 text-red-800",
+    amber: "border-amber-200 bg-amber-50 text-amber-800",
+    slate: "border-slate-200 bg-slate-50 text-slate-800",
+    blue: "border-blue-200 bg-blue-50 text-blue-800",
+  };
+  return (
+    <Link href={href} className={`block rounded-md border p-3 text-sm ${tones[tone]}`}>
+      <p className="font-black">{label}</p>
+      <p className="mt-1">{value}</p>
+    </Link>
   );
 }
