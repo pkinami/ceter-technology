@@ -1,4 +1,4 @@
-import { logServerError } from "./server-logging";
+import { logServerError } from "./server-logging.ts";
 
 export function firstEnv(...names: string[]) {
   for (const name of names) {

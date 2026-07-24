@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-07-23T18:14:42.825Z",
+  "timestamp": "failed-preflight",
+  "state": "PILOT_SETUP_FAILED",
+  "dbMode": false,
+  "dryRun": false,
+  "keepImages": false,
+  "provenBrands": false,
+  "provenCatalogueBrands": [
+    "HP",
+    "Kyocera",
+    "Canon",
+    "Epson",
+    "Brother",
+    "Xerox",
+    "Ricoh"
+  ],
+  "envFiles": [
+    ".env.local",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_FAILED",
+    "failedComponent": "Icecat connection",
+    "failureReason": "Icecat is temporarily unavailable.",
+    "diagnostics": {
+      "responseStatus": 503,
+      "icecatMessage": null,
+      "contentErrors": null,
+      "requestParameterNames": [
+        "lang",
+        "shopname",
+        "icecat_id",
+        "content"
+      ],
+      "responseProductId": null
+    },
+    "checks": []
+  },
+  "outcome": {
+    "eligible": 0,
+    "attempted": 0,
+    "ready": 0,
+    "review": 0,
+    "failed": 0,
+    "skipped": 0,
+    "restricted": 0,
+    "notFound": 0,
+    "invalid": 0,
+    "retryable": 0
+  },
+  "passCriteria": {
+    "readyCount": 0
+  },
+  "counts": {
+    "IMAGE_READY": 0,
+    "REVIEW_REQUIRED": 0,
+    "IMAGE_NOT_FOUND": 0,
+    "IMAGE_RESTRICTED": 0,
+    "IMAGE_RETRYABLE": 0,
+    "IMAGE_INVALID": 0,
+    "IMAGE_UPLOAD_FAILED": 0
+  },
+  "cleanup": {
+    "attempted": false,
+    "deleted": [],
+    "error": null
+  },
+  "rows": [],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-failed-preflight.json"
+}

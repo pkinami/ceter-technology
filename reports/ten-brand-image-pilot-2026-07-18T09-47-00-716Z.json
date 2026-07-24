@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-07-18T09:47:01.496Z",
+  "dryRun": true,
+  "brands": [
+    "HP",
+    "Kyocera",
+    "Canon",
+    "Epson",
+    "Brother",
+    "Xerox",
+    "Ricoh",
+    "Logitech",
+    "Kingston",
+    "TP-Link"
+  ],
+  "passed": true,
+  "rows": [
+    {
+      "brand": "HP",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Kyocera",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Canon",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Epson",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Brother",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Xerox",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Ricoh",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Logitech",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "Kingston",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    },
+    {
+      "brand": "TP-Link",
+      "state": "IMAGE_RETRYABLE",
+      "failureReason": "Pilot setup/query failed (EACCES): \nInvalid `prisma.productSource.findFirst()` invocation:\n\n\n",
+      "dryRun": true
+    }
+  ]
+}

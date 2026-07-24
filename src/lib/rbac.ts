@@ -99,19 +99,17 @@ export function permissionCode(module: PermissionModule, action: PermissionActio
 
 export const ensureDefaultRbac = cache(async () => {
   const expectedRoleSlugs = roleCatalog.map((role) => role.slug);
-  const [permissionCount, systemRoleCount, legacyAdminWithoutRole] = await Promise.all([
-    prisma.permission.count({
-      where: { code: { in: permissionCatalog.map((item) => codeFor(item.module, item.action)) } },
-    }),
-    prisma.userRole.count({ where: { slug: { in: expectedRoleSlugs }, isSystem: true } }),
-    prisma.user.findFirst({
-      where: {
-        role: "ADMIN",
-        roleAssignments: { none: {} },
-      },
-      select: { id: true },
-    }),
-  ]);
+  const permissionCount = await prisma.permission.count({
+    where: { code: { in: permissionCatalog.map((item) => codeFor(item.module, item.action)) } },
+  });
+  const systemRoleCount = await prisma.userRole.count({ where: { slug: { in: expectedRoleSlugs }, isSystem: true } });
+  const legacyAdminWithoutRole = await prisma.user.findFirst({
+    where: {
+      role: "ADMIN",
+      roleAssignments: { none: {} },
+    },
+    select: { id: true },
+  });
 
   if (
     permissionCount === permissionCatalog.length &&
@@ -261,6 +259,20 @@ export async function requireAnyPermission(...permissions: Array<[PermissionModu
 
   if (!permissions.some(([module, action]) => user.permissions.has(codeFor(module, action)))) {
     redirect("/admin/login?error=not-authorized");
+  }
+
+  return user;
+}
+
+export async function requireOwnerSuperAdmin() {
+  const user = await getCurrentUserWithAccess();
+
+  if (!user) {
+    redirect("/admin/login");
+  }
+
+  if (!user.roles.some((role) => role.slug === "super-admin")) {
+    redirect("/admin/access-denied");
   }
 
   return user;

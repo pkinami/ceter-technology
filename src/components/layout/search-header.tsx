@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { MessageCircle, PackageCheck, Search, ShoppingCart, UserRound } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore } from "react";
-import { searchSuggestionGroups } from "@/lib/navigation";
+import { SearchSubmitButton } from "@/components/forms/search-submit-button";
+import type { NavigationCategory } from "@/lib/catalog";
 import { whatsappUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 
-export function SearchHeader() {
+export function SearchHeader({
+  categories,
+  brands,
+}: {
+  categories: NavigationCategory[];
+  brands: string[];
+}) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const itemCount = useSyncExternalStore(
@@ -21,16 +28,62 @@ export function SearchHeader() {
     const normalizedQuery = query.trim().toLowerCase();
 
     if (!normalizedQuery) {
-      return searchSuggestionGroups;
+      return [
+        {
+          label: "Popular searches",
+          items: ["Printers", "Photocopiers", "Toners", "Kyocera", "HP", "UPS"].map((item) => ({
+            label: item,
+            href: `/products?q=${encodeURIComponent(item)}`,
+          })),
+        },
+        {
+          label: "Categories",
+          items: categories.slice(0, 8).map((category) => ({
+            label: `${category.name} (${category.productCount})`,
+            href: `/products?category=${encodeURIComponent(category.slug)}`,
+          })),
+        },
+        {
+          label: "Brands",
+          items: brands.map((brand) => ({
+            label: brand,
+            href: `/products?brand=${encodeURIComponent(brand)}`,
+          })),
+        },
+      ];
     }
 
-    return searchSuggestionGroups
+    const groups = [
+      {
+        label: "Categories",
+        items: categories.flatMap((category) => [
+          {
+            label: `${category.name} (${category.productCount})`,
+            href: `/products?category=${encodeURIComponent(category.slug)}`,
+          },
+          ...category.children.slice(0, 3).map((child) => ({
+            label: `${child.name} (${child.productCount})`,
+            href: `/products?category=${encodeURIComponent(child.slug)}`,
+          })),
+        ]),
+      },
+      {
+        label: "Brands",
+        items: brands.map((brand) => ({ label: brand, href: `/products?brand=${encodeURIComponent(brand)}` })),
+      },
+      {
+        label: "Search",
+        items: [{ label: `Search "${query.trim()}"`, href: `/products?q=${encodeURIComponent(query.trim())}` }],
+      },
+    ];
+
+    return groups
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => item.label.toLowerCase().includes(normalizedQuery)),
       }))
       .filter((group) => group.items.length > 0);
-  }, [query]);
+  }, [brands, categories, query]);
 
   return (
     <>
@@ -47,9 +100,7 @@ export function SearchHeader() {
             className="h-12 w-full rounded-md border border-slate-300 bg-white pl-12 pr-28 text-sm font-semibold text-slate-950 shadow-sm placeholder:text-slate-500 focus:border-orange-400"
           />
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
-          <button type="submit" className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center rounded-md bg-slate-950 px-5 text-sm font-black text-white hover:bg-orange-600">
-            Search
-          </button>
+          <SearchSubmitButton className="absolute right-1.5 top-1/2 h-9 -translate-y-1/2 rounded-md bg-slate-950 px-5 text-white hover:bg-orange-600" />
         </label>
 
         <div
@@ -80,7 +131,7 @@ export function SearchHeader() {
       </form>
 
       <div className="flex items-center gap-1 sm:gap-2">
-        <Link href="/checkout" className="hidden min-h-11 items-center gap-2 rounded-md px-3 text-sm font-black text-slate-700 hover:bg-slate-100 lg:inline-flex">
+        <Link href="/account" className="hidden min-h-11 items-center gap-2 rounded-md px-3 text-sm font-black text-slate-700 hover:bg-slate-100 lg:inline-flex">
           <UserRound className="h-4 w-4 text-slate-500" />
           Account
         </Link>
@@ -104,6 +155,7 @@ export function SearchHeader() {
           <span className="sr-only">Search products</span>
           <input name="q" placeholder="Search printers, laptops, toners..." className="h-11 w-full rounded-md border border-slate-300 bg-white pl-10 pr-3 text-sm font-semibold text-slate-950 placeholder:text-slate-500" />
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <SearchSubmitButton className="absolute right-1 top-1/2 h-9 -translate-y-1/2 rounded-md bg-slate-950 px-3 text-white" compact />
         </label>
       </form>
     </>

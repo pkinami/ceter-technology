@@ -15,8 +15,8 @@ import {
 } from "./media-controls";
 
 export const metadata: Metadata = {
-  title: "Admin Media",
-  description: "Upload, manage, and assign CETER Technology media assets.",
+  title: "Media",
+  description: "Upload, manage, and assign CETER Technology product and website media assets.",
 };
 
 type Props = {
@@ -68,7 +68,12 @@ export default async function AdminMediaPage({ searchParams }: Props) {
   ]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <p className="text-xs font-black uppercase tracking-wide text-orange-600">Media</p>
+        <h1 className="text-2xl font-black text-slate-950">Product images and website media</h1>
+        <p className="mt-1 text-sm text-slate-500">Upload files, assign images to products, copy URLs, and remove unused media.</p>
+      </div>
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

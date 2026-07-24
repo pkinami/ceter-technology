@@ -1,0 +1,238 @@
+{
+  "generatedAt": "2026-07-18T14:51:30.125Z",
+  "timestamp": "2026-07-18T14-47-28-216Z",
+  "state": "PILOT_COMPLETED_WITH_FAILURES",
+  "dbMode": true,
+  "keepImages": false,
+  "provenCatalogueBrands": [
+    "HP",
+    "Kyocera",
+    "Canon",
+    "Epson",
+    "Brother",
+    "Xerox",
+    "Ricoh"
+  ],
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_READY",
+    "checks": [
+      {
+        "component": "Icecat connection",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "icecat_id",
+            "content"
+          ],
+          "responseProductId": "30003204"
+        }
+      },
+      {
+        "component": "Icecat HP identifier probe",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "responseProductId": "120832671"
+        },
+        "failureReason": null
+      },
+      {
+        "component": "Supabase temporary upload/read/delete",
+        "ok": true,
+        "path": "catalogue-pilot/preflight/2026-07-18T14-47-28-216Z-a5d9349d9121.webp",
+        "status": 200,
+        "deleted": true
+      },
+      {
+        "component": "Database connection",
+        "ok": true
+      }
+    ]
+  },
+  "outcome": {
+    "eligible": 1,
+    "attempted": 1,
+    "ready": 0,
+    "review": 0,
+    "failed": 1,
+    "skipped": 0,
+    "restricted": 0,
+    "notFound": 1,
+    "invalid": 0,
+    "retryable": 0
+  },
+  "passCriteria": {
+    "attemptedRows": 1,
+    "selectedRows": 1,
+    "readyCount": 0,
+    "eligible": 1,
+    "attempted": 1,
+    "ready": 0,
+    "review": 0,
+    "failed": 1,
+    "skipped": 0,
+    "restricted": 0,
+    "notFound": 1,
+    "invalid": 0,
+    "retryable": 0
+  },
+  "counts": {
+    "IMAGE_READY": 0,
+    "REVIEW_REQUIRED": 0,
+    "IMAGE_NOT_FOUND": 1,
+    "IMAGE_RESTRICTED": 0,
+    "IMAGE_RETRYABLE": 0,
+    "IMAGE_INVALID": 0,
+    "IMAGE_UPLOAD_FAILED": 0
+  },
+  "cleanup": {
+    "attempted": false,
+    "deleted": [],
+    "error": null
+  },
+  "rows": [
+    {
+      "brand": "HP",
+      "model": "8J9K7F#A62",
+      "provider": "MANUFACTURER_PAGE",
+      "originalImageUrl": "https://www.hp.com/us-en/shop/pdp/hp-laserjet-mfp-m235sdw-printer",
+      "finalRemoteHost": null,
+      "httpStatus": null,
+      "detectedMIME": null,
+      "originalDimensions": null,
+      "outputDimensions": null,
+      "sha256": null,
+      "supabasePath": null,
+      "verificationResult": null,
+      "state": "IMAGE_NOT_FOUND",
+      "failureReason": "fetch failed",
+      "counters": {
+        "providerAttempts": 2,
+        "candidatesDiscovered": 0,
+        "candidatesRejectedByHost": 0,
+        "candidatesRejectedByIdentity": 0,
+        "candidatesRejectedByRelevance": 0,
+        "candidatesRejectedByFormat": 0,
+        "imagesDownloaded": 0,
+        "imagesUploaded": 0,
+        "finalSupabaseImageCount": 0,
+        "imageCandidatesDiscovered": 0,
+        "remoteImagesDownloaded": 0,
+        "imagesRejected": 3
+      },
+      "diagnostics": [
+        {
+          "provider": "ICECAT_LOOKUP",
+          "originalUrl": "https://live.icecat.biz/api",
+          "originalHost": "live.icecat.biz",
+          "finalUrl": null,
+          "finalHost": null,
+          "httpStatus": 404,
+          "declaredContentType": null,
+          "detectedFileType": null,
+          "byteCount": 0,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 0,
+          "reason": "Icecat returned HTTP 404; continuing to official page.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_NOT_FOUND",
+          "phase": "icecat-request",
+          "originalBrand": "HP",
+          "originalIdentifier": "8J9K7F#A62",
+          "normalizedBrandSent": "HP",
+          "identifierVariantSent": "8J9K7F#A62",
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "rejectionReason": "Icecat returned HTTP 404; continuing to official page."
+        },
+        {
+          "provider": "ICECAT_LOOKUP",
+          "originalUrl": "https://live.icecat.biz/api",
+          "originalHost": "live.icecat.biz",
+          "finalUrl": null,
+          "finalHost": null,
+          "httpStatus": null,
+          "declaredContentType": null,
+          "detectedFileType": null,
+          "byteCount": 0,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 0,
+          "reason": "fetch failed",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID",
+          "phase": "icecat-request",
+          "originalBrand": "HP",
+          "originalIdentifier": "8J9K7F#A62",
+          "normalizedBrandSent": "HP",
+          "identifierVariantSent": "8J9K7F",
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "sanitizedError": "fetch failed"
+        },
+        {
+          "provider": "MANUFACTURER_PAGE",
+          "originalUrl": "https://www.hp.com/us-en/shop/pdp/hp-laserjet-mfp-m235sdw-printer",
+          "originalHost": "www.hp.com",
+          "finalUrl": null,
+          "finalHost": null,
+          "httpStatus": null,
+          "declaredContentType": null,
+          "detectedFileType": null,
+          "byteCount": 0,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 0,
+          "reason": "fetch failed",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID",
+          "phase": "manufacturer-page",
+          "originalBrand": "HP",
+          "originalIdentifier": "8J9K7F#A62",
+          "pageHost": "www.hp.com",
+          "sanitizedError": "fetch failed"
+        }
+      ]
+    }
+  ],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T14-47-28-216Z.json"
+}

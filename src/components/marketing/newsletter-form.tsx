@@ -1,37 +1,58 @@
 "use client";
 
-import { Mail } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import { sanitizeOperationMessage } from "@/lib/feedback";
 
 export function NewsletterForm({ source = "website" }: { source?: string }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { showToast, updateToast } = useToast();
 
   function subscribe() {
+    if (running || isPending) return;
     setMessage(null);
+    setRunning(true);
+    const toastId = showToast({ type: "loading", title: "Sending request", message: "Subscribing email address." });
     startTransition(async () => {
-      const response = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source }),
-      });
-      const body = (await response.json().catch(() => null)) as { message?: string } | null;
+      try {
+        const response = await fetch("/api/newsletter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, source }),
+        });
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
 
-      if (!response.ok) {
-        setMessage(body?.message ?? "Subscription failed.");
-        return;
+        if (!response.ok) {
+          const text = sanitizeOperationMessage(body?.message, "Subscription failed. Please try again.");
+          setMessage(text);
+          updateToast(toastId, { type: "error", title: "Subscription failed", message: text });
+          return;
+        }
+
+        setEmail("");
+        setMessage("Subscribed. You will receive CETER Technology updates.");
+        updateToast(toastId, { type: "success", title: "Subscribed", message: "You will receive CETER Technology updates." });
+      } catch (error) {
+        const text = sanitizeOperationMessage(error, "Subscription failed. Please try again.");
+        setMessage(text);
+        updateToast(toastId, { type: "error", title: "Subscription failed", message: text });
+      } finally {
+        setRunning(false);
       }
-
-      setEmail("");
-      setMessage("Subscribed. You will receive CETER Technology updates.");
     });
   }
+
+  const busy = running || isPending;
 
   return (
     <form
       className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+      aria-busy={busy}
       onSubmit={(event) => {
         event.preventDefault();
         subscribe();
@@ -52,11 +73,12 @@ export function NewsletterForm({ source = "website" }: { source?: string }) {
           className="h-12 w-full rounded-md border border-slate-300 pl-10 pr-3 text-slate-950 outline-none focus:border-orange-500"
         />
       </div>
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Subscribing..." : "Subscribe"}
+      <Button type="submit" disabled={busy}>
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        {busy ? "Sending request" : "Subscribe"}
       </Button>
       {message ? (
-        <p className="text-sm font-semibold text-slate-600 sm:col-span-2">{message}</p>
+        <p className="text-sm font-semibold text-slate-600 sm:col-span-2" role="status" aria-live="polite">{message}</p>
       ) : null}
     </form>
   );

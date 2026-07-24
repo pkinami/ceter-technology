@@ -22,6 +22,19 @@ const services: [string, LucideIcon][] = [
   ["IT support", MonitorCog],
 ];
 
+const serviceDescriptions: Record<string, string> = {
+  "Printer installation":
+    "USB, Ethernet, and wireless printer setup with drivers, configuration, network connection, print testing, and user guidance.",
+  "Printer repair":
+    "Diagnosis and repair for printer faults, paper-feed problems, print-quality issues, connectivity failures, and hardware errors.",
+  "Maintenance contracts":
+    "Preventive maintenance, scheduled servicing, priority support, consumable monitoring, and health checks that reduce downtime.",
+  "Office printing solutions":
+    "Office print assessments covering device selection, fleet setup, workflows, access controls, and cost-reduction strategies.",
+  "IT support":
+    "Remote and on-site assistance for computers, software, networks, peripherals, email, security, and everyday technical issues.",
+};
+
 export default function ServicesPage() {
   return (
     <div className="bg-white">
@@ -40,19 +53,20 @@ export default function ServicesPage() {
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
           {services.map(([service, Icon]) => (
             <article
               key={service}
-              className="rounded-lg border border-slate-200 bg-slate-50 p-6"
+              className="flex h-full min-h-64 flex-col rounded-lg border border-slate-200 bg-slate-50 p-6"
             >
-              <Icon className="h-9 w-9 text-orange-500" />
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-white text-orange-500 ring-1 ring-slate-200">
+                <Icon className="h-6 w-6" aria-hidden="true" />
+              </span>
               <h2 className="mt-5 text-xl font-black text-slate-950">
                 {service}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Professional assessment, practical recommendations, and reliable
-                follow-through from CETER Technology.
+              <p className="mt-3 grow text-sm leading-6 text-slate-600">
+                {serviceDescriptions[service]}
               </p>
             </article>
           ))}

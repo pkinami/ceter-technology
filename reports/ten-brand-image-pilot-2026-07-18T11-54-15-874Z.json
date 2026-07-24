@@ -1,0 +1,103 @@
+{
+  "generatedAt": "2026-07-18T11:54:34.539Z",
+  "timestamp": "2026-07-18T11-54-15-874Z",
+  "state": "PILOT_FAILED",
+  "dbMode": false,
+  "keepImages": true,
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_READY",
+    "checks": [
+      {
+        "component": "Icecat connection",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "icecat_id",
+            "content"
+          ],
+          "responseProductId": "30003204"
+        }
+      },
+      {
+        "component": "Icecat HP identifier probe",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "responseProductId": "120832671"
+        },
+        "failureReason": null
+      },
+      {
+        "component": "Supabase temporary upload/read/delete",
+        "ok": true,
+        "path": "catalogue-pilot/preflight/2026-07-18T11-54-15-874Z-91a90c799e37.webp",
+        "status": 200,
+        "deleted": true
+      }
+    ]
+  },
+  "passCriteria": {
+    "attemptedRows": 1,
+    "selectedRows": 1,
+    "readyCount": 0
+  },
+  "counts": {
+    "IMAGE_READY": 0,
+    "IMAGE_NOT_FOUND": 1,
+    "IMAGE_RESTRICTED": 0,
+    "IMAGE_RETRYABLE": 0,
+    "IMAGE_INVALID": 0,
+    "IMAGE_UPLOAD_FAILED": 0
+  },
+  "cleanup": {
+    "attempted": false,
+    "deleted": [],
+    "error": null
+  },
+  "rows": [
+    {
+      "brand": "Canon",
+      "model": "5455C007",
+      "provider": null,
+      "originalImageUrl": null,
+      "finalRemoteHost": null,
+      "httpStatus": null,
+      "detectedMIME": null,
+      "originalDimensions": null,
+      "outputDimensions": null,
+      "sha256": null,
+      "supabasePath": null,
+      "verificationResult": null,
+      "state": "IMAGE_NOT_FOUND",
+      "failureReason": "No trusted, identity-verified image candidates were accepted.",
+      "counters": {
+        "imageCandidatesDiscovered": 0,
+        "remoteImagesDownloaded": 0,
+        "imagesRejected": 0,
+        "imagesUploaded": 0,
+        "finalSupabaseImageCount": 0
+      },
+      "diagnostics": []
+    }
+  ],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T11-54-15-874Z.json"
+}

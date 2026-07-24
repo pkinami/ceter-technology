@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-07-18T11:34:21.977Z",
+  "timestamp": "2026-07-18T11-33-30-847Z",
+  "state": "PILOT_PASSED",
+  "dbMode": false,
+  "keepImages": true,
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_READY",
+    "checks": [
+      {
+        "component": "Icecat connection",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "icecat_id",
+            "content"
+          ],
+          "responseProductId": "30003204"
+        }
+      },
+      {
+        "component": "Icecat HP identifier probe",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "responseProductId": "120832671"
+        },
+        "failureReason": null
+      },
+      {
+        "component": "Supabase temporary upload/read/delete",
+        "ok": true,
+        "path": "catalogue-pilot/preflight/2026-07-18T11-33-30-847Z-8b935f85548c.webp",
+        "status": 200,
+        "deleted": true
+      }
+    ]
+  },
+  "passCriteria": {
+    "attemptedRows": 1,
+    "selectedRows": 1,
+    "readyCount": 1
+  },
+  "counts": {
+    "IMAGE_READY": 1,
+    "IMAGE_NOT_FOUND": 0,
+    "IMAGE_RESTRICTED": 0,
+    "IMAGE_RETRYABLE": 0,
+    "IMAGE_INVALID": 0,
+    "IMAGE_UPLOAD_FAILED": 0
+  },
+  "cleanup": {
+    "attempted": false,
+    "deleted": [],
+    "error": null
+  },
+  "rows": [
+    {
+      "brand": "Kyocera",
+      "model": "MA3500ci",
+      "provider": "PAGE_IMAGE",
+      "originalImageUrl": "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+      "finalRemoteHost": "www.kyoceradocumentsolutions.eu",
+      "httpStatus": 200,
+      "detectedMIME": "png",
+      "originalDimensions": {
+        "width": 540,
+        "height": 540
+      },
+      "outputDimensions": {
+        "width": 540,
+        "height": 540
+      },
+      "sha256": "718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316",
+      "supabasePath": "catalogue-pilot/2026-07-18T11-33-30-847Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp",
+      "verificationResult": {
+        "ok": true,
+        "status": 200,
+        "url": "https://emnelgydjkdnsleimpoj.supabase.co/storage/v1/object/public/product-images/catalogue-pilot/2026-07-18T11-33-30-847Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp"
+      },
+      "state": "IMAGE_READY",
+      "failureReason": null,
+      "counters": {
+        "imageCandidatesDiscovered": 5,
+        "remoteImagesDownloaded": 2,
+        "imagesRejected": 1,
+        "imagesUploaded": 1,
+        "finalSupabaseImageCount": 1
+      },
+      "diagnostics": [
+        {
+          "provider": "JSON_LD",
+          "originalUrl": "https://www.kyoceradocumentsolutions.eu/en/products/mfp/TASKALFAMA3500CI.html",
+          "originalHost": "www.kyoceradocumentsolutions.eu",
+          "finalUrl": "https://www.kyoceradocumentsolutions.eu/en/products/mfp/TASKALFAMA3500CI.html",
+          "finalHost": "www.kyoceradocumentsolutions.eu",
+          "httpStatus": 200,
+          "declaredContentType": "text/html;charset=utf-8",
+          "detectedFileType": null,
+          "byteCount": 197344,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 900,
+          "reason": "Input buffer has corrupt header: glib: XML parse error: Error domain 3 code 201 on line 1566 column 66 of data: Namespace prefix xlink for href on use is not defined",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        },
+        {
+          "provider": "PAGE_IMAGE",
+          "originalUrl": "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+          "originalHost": "www.kyoceradocumentsolutions.eu",
+          "finalUrl": "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+          "finalHost": "www.kyoceradocumentsolutions.eu",
+          "httpStatus": 200,
+          "declaredContentType": "image/png",
+          "detectedFileType": "png",
+          "byteCount": 117005,
+          "originalWidth": 540,
+          "originalHeight": 540,
+          "outputWidth": 540,
+          "outputHeight": 540,
+          "candidateScore": 409,
+          "reason": "Image uploaded to Supabase.",
+          "sharpResult": "converted png 540x540 to webp 540x540",
+          "supabaseUploadResult": "uploaded:catalogue-pilot/2026-07-18T11-33-30-847Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp",
+          "state": "IMAGE_READY"
+        }
+      ]
+    }
+  ],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T11-33-30-847Z.json"
+}

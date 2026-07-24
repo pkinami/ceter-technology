@@ -4,6 +4,7 @@ export type Product = {
   name: string;
   brand: string;
   description: string;
+  sku: string | null;
   price: number;
   discountPrice: number | null;
   category: string;
@@ -14,7 +15,7 @@ export type Product = {
   stock: number;
   lowStockThreshold: number;
   availability: "In stock" | "Limited stock" | "Out of stock";
-  status: "ACTIVE" | "OUT_OF_STOCK" | "DRAFT" | "NEEDS_ATTENTION";
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   badges: ("FEATURED" | "NEW_ARRIVAL" | "BEST_SELLER" | "PROMOTION")[];
   specs: Record<string, string>;
   createdAt: string;

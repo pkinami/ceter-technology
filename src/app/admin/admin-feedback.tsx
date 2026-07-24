@@ -44,7 +44,6 @@ type AdminActionFormProps = {
   steps?: string[];
   successTitle?: string;
   successMetrics?: ActionMetric[];
-  confirmMessage?: string;
 };
 
 const icons = {
@@ -61,7 +60,7 @@ const icons = {
 };
 
 const defaultSteps = [
-  "Starting automation",
+  "Starting import",
   "Connecting to data sources",
   "Checking product feeds",
   "Processing records",
@@ -81,7 +80,6 @@ export function AdminActionForm({
   steps = defaultSteps,
   successTitle = "Action completed",
   successMetrics = [],
-  confirmMessage,
 }: AdminActionFormProps) {
   const router = useRouter();
   const { showToast, updateToast } = useToast();
@@ -105,10 +103,6 @@ export function AdminActionForm({
   }, [running, steps.length]);
 
   async function run(formData: FormData) {
-    if (confirmMessage && !window.confirm(confirmMessage)) {
-      return;
-    }
-
     setRunning(true);
     setStepIndex(0);
     setError(null);

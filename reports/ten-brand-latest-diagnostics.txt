@@ -1,0 +1,553 @@
+﻿==================================================
+BRAND: Brother
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-13-34-524Z.json
+==================================================
+{
+    "brand":  "Brother",
+    "model":  "DCP-L2540DW",
+    "provider":  "PAGE_IMAGE",
+    "originalImageUrl":  "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+    "finalRemoteHost":  "assets.brother.com",
+    "httpStatus":  200,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_INVALID",
+    "failureReason":  "Unsupported or corrupt image format: heif.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  5,
+                     "remoteImagesDownloaded":  5,
+                     "imagesRejected":  5,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  "JSON_LD",
+                            "originalUrl":  "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:1360",
+                            "originalHost":  "assets.brother.com",
+                            "finalUrl":  "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:1360",
+                            "finalHost":  "assets.brother.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/avif",
+                            "detectedFileType":  null,
+                            "byteCount":  14811,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  1000,
+                            "reason":  "Unsupported or corrupt image format: heif.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        },
+                        {
+                            "provider":  "PAGE_IMAGE",
+                            "originalUrl":  "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:100",
+                            "originalHost":  "assets.brother.com",
+                            "finalUrl":  "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:100",
+                            "finalHost":  "assets.brother.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/avif",
+                            "detectedFileType":  null,
+                            "byteCount":  4803,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  480,
+                            "reason":  "Unsupported or corrupt image format: heif.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        },
+                        {
+                            "provider":  "PAGE_IMAGE",
+                            "originalUrl":  "https://assets.brother.com/transform/6ca147e9-c035-4431-ba82-be74af8ca7ea/17433_multifuncional_laser_monocromatica_dcpl2540dw_00-png?io=transform:fit,width:100",
+                            "originalHost":  "assets.brother.com",
+                            "finalUrl":  "https://assets.brother.com/transform/6ca147e9-c035-4431-ba82-be74af8ca7ea/17433_multifuncional_laser_monocromatica_dcpl2540dw_00-png?io=transform:fit,width:100",
+                            "finalHost":  "assets.brother.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/avif",
+                            "detectedFileType":  null,
+                            "byteCount":  4236,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  480,
+                            "reason":  "Unsupported or corrupt image format: heif.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        },
+                        {
+                            "provider":  "PAGE_IMAGE",
+                            "originalUrl":  "https://assets.brother.com/transform/914a5ac6-8997-43fb-aeb0-1d6f1bf18036/3969_DCPL2540DW_left-png?io=transform:fit,width:100",
+                            "originalHost":  "assets.brother.com",
+                            "finalUrl":  "https://assets.brother.com/transform/914a5ac6-8997-43fb-aeb0-1d6f1bf18036/3969_DCPL2540DW_left-png?io=transform:fit,width:100",
+                            "finalHost":  "assets.brother.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/avif",
+                            "detectedFileType":  null,
+                            "byteCount":  4968,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  480,
+                            "reason":  "Unsupported or corrupt image format: heif.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        },
+                        {
+                            "provider":  "PAGE_IMAGE",
+                            "originalUrl":  "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+                            "originalHost":  "assets.brother.com",
+                            "finalUrl":  "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+                            "finalHost":  "assets.brother.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/avif",
+                            "detectedFileType":  null,
+                            "byteCount":  4302,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  480,
+                            "reason":  "Unsupported or corrupt image format: heif.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: Canon
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-12-43-035Z.json
+==================================================
+{
+    "brand":  "Canon",
+    "model":  "5455C007",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_NOT_FOUND",
+    "failureReason":  "No trusted, identity-verified image candidates were accepted.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+
+                    ]
+}
+
+==================================================
+BRAND: Epson
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-13-08-325Z.json
+==================================================
+{
+    "brand":  "Epson",
+    "model":  "C11CJ67503",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_RETRYABLE",
+    "failureReason":  "product-row timed out after 120000ms.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  null,
+                            "originalUrl":  null,
+                            "originalHost":  null,
+                            "finalUrl":  null,
+                            "finalHost":  null,
+                            "httpStatus":  null,
+                            "declaredContentType":  null,
+                            "detectedFileType":  null,
+                            "byteCount":  0,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  0,
+                            "reason":  "fetch failed",
+                            "phase":  "product-row",
+                            "timeoutDurationMs":  120000,
+                            "sanitizedError":  "fetch failed",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_RETRYABLE"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: HP
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-11-46-219Z.json
+==================================================
+{
+    "brand":  "HP",
+    "model":  "5HH67A",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_RETRYABLE",
+    "failureReason":  "manufacturer-page timed out after 25000ms.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  null,
+                            "originalUrl":  null,
+                            "originalHost":  null,
+                            "finalUrl":  null,
+                            "finalHost":  null,
+                            "httpStatus":  null,
+                            "declaredContentType":  null,
+                            "detectedFileType":  null,
+                            "byteCount":  0,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  0,
+                            "reason":  "manufacturer-page timed out after 25000ms.",
+                            "phase":  "manufacturer-page",
+                            "timeoutDurationMs":  25000,
+                            "sanitizedError":  "manufacturer-page timed out after 25000ms.",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_RETRYABLE"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: Kingston
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-14-22-118Z.json
+==================================================
+{
+    "brand":  "Kingston",
+    "model":  "SKC3000S/1024G",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_NOT_FOUND",
+    "failureReason":  "No trusted, identity-verified image candidates were accepted.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+
+                    ]
+}
+
+==================================================
+BRAND: Kyocera
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-12-28-715Z.json
+==================================================
+{
+    "brand":  "Kyocera",
+    "model":  "MA3500ci",
+    "provider":  "PAGE_IMAGE",
+    "originalImageUrl":  "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+    "finalRemoteHost":  "www.kyoceradocumentsolutions.eu",
+    "httpStatus":  200,
+    "detectedMIME":  "png",
+    "originalDimensions":  {
+                               "width":  540,
+                               "height":  540
+                           },
+    "outputDimensions":  {
+                             "width":  540,
+                             "height":  540
+                         },
+    "sha256":  "718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316",
+    "supabasePath":  "catalogue-pilot/2026-07-18T12-12-28-715Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp",
+    "verificationResult":  {
+                               "ok":  true,
+                               "status":  200,
+                               "url":  "https://emnelgydjkdnsleimpoj.supabase.co/storage/v1/object/public/product-images/catalogue-pilot/2026-07-18T12-12-28-715Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp"
+                           },
+    "state":  "IMAGE_READY",
+    "failureReason":  null,
+    "counters":  {
+                     "imageCandidatesDiscovered":  5,
+                     "remoteImagesDownloaded":  2,
+                     "imagesRejected":  1,
+                     "imagesUploaded":  1,
+                     "finalSupabaseImageCount":  1
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  "JSON_LD",
+                            "originalUrl":  "https://www.kyoceradocumentsolutions.eu/en/products/mfp/TASKALFAMA3500CI.html",
+                            "originalHost":  "www.kyoceradocumentsolutions.eu",
+                            "finalUrl":  "https://www.kyoceradocumentsolutions.eu/en/products/mfp/TASKALFAMA3500CI.html",
+                            "finalHost":  "www.kyoceradocumentsolutions.eu",
+                            "httpStatus":  200,
+                            "declaredContentType":  "text/html;charset=utf-8",
+                            "detectedFileType":  null,
+                            "byteCount":  197344,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  900,
+                            "reason":  "Input buffer has corrupt header: glib: XML parse error: Error domain 3 code 201 on line 1566 column 66 of data: Namespace prefix xlink for href on use is not defined",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_INVALID"
+                        },
+                        {
+                            "provider":  "PAGE_IMAGE",
+                            "originalUrl":  "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+                            "originalHost":  "www.kyoceradocumentsolutions.eu",
+                            "finalUrl":  "https://www.kyoceradocumentsolutions.eu/content/dam/kyocera/common/products/mfp/TASKALFAMA3500CI/square-540x540-MA3500ci_new_new.png",
+                            "finalHost":  "www.kyoceradocumentsolutions.eu",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/png",
+                            "detectedFileType":  "png",
+                            "byteCount":  117005,
+                            "originalWidth":  540,
+                            "originalHeight":  540,
+                            "outputWidth":  540,
+                            "outputHeight":  540,
+                            "candidateScore":  409,
+                            "reason":  "Image uploaded to Supabase.",
+                            "sharpResult":  "converted png 540x540 to webp 540x540",
+                            "supabaseUploadResult":  "uploaded:catalogue-pilot/2026-07-18T12-12-28-715Z/kyocera/718719e058ec249a050790517fdcc551c3109c8a0ddcf239d6f2dfa4ef9ad316.webp",
+                            "state":  "IMAGE_READY"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: Logitech
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-14-11-906Z.json
+==================================================
+{
+    "brand":  "Logitech",
+    "model":  "910-006559",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_NOT_FOUND",
+    "failureReason":  "No trusted, identity-verified image candidates were accepted.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+
+                    ]
+}
+
+==================================================
+BRAND: Ricoh
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-13-58-892Z.json
+==================================================
+{
+    "brand":  "Ricoh",
+    "model":  "IM C3010",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_RETRYABLE",
+    "failureReason":  "product-row timed out after 120000ms.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  null,
+                            "originalUrl":  null,
+                            "originalHost":  null,
+                            "finalUrl":  null,
+                            "finalHost":  null,
+                            "httpStatus":  null,
+                            "declaredContentType":  null,
+                            "detectedFileType":  null,
+                            "byteCount":  0,
+                            "originalWidth":  null,
+                            "originalHeight":  null,
+                            "outputWidth":  null,
+                            "outputHeight":  null,
+                            "candidateScore":  0,
+                            "reason":  "fetch failed",
+                            "phase":  "product-row",
+                            "timeoutDurationMs":  120000,
+                            "sanitizedError":  "fetch failed",
+                            "sharpResult":  null,
+                            "supabaseUploadResult":  null,
+                            "state":  "IMAGE_RETRYABLE"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: TP-Link
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-14-30-009Z.json
+==================================================
+{
+    "brand":  "TP-Link",
+    "model":  "Archer AX55",
+    "provider":  "OPEN_GRAPH",
+    "originalImageUrl":  "https://static.tp-link.com/upload/image-line/Overview_Archer_AX55_01_large_20210816012555f.jpg",
+    "finalRemoteHost":  "static.tp-link.com",
+    "httpStatus":  200,
+    "detectedMIME":  "jpeg",
+    "originalDimensions":  {
+                               "width":  1000,
+                               "height":  1000
+                           },
+    "outputDimensions":  {
+                             "width":  1000,
+                             "height":  1000
+                         },
+    "sha256":  "fe3a05f11fa87d010bef385317a8a5b4e7014522f76a1319b131d385e69464cc",
+    "supabasePath":  "catalogue-pilot/2026-07-18T12-14-30-009Z/tp-link/fe3a05f11fa87d010bef385317a8a5b4e7014522f76a1319b131d385e69464cc.webp",
+    "verificationResult":  {
+                               "ok":  true,
+                               "status":  200,
+                               "url":  "https://emnelgydjkdnsleimpoj.supabase.co/storage/v1/object/public/product-images/catalogue-pilot/2026-07-18T12-14-30-009Z/tp-link/fe3a05f11fa87d010bef385317a8a5b4e7014522f76a1319b131d385e69464cc.webp"
+                           },
+    "state":  "IMAGE_READY",
+    "failureReason":  null,
+    "counters":  {
+                     "imageCandidatesDiscovered":  5,
+                     "remoteImagesDownloaded":  1,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  1,
+                     "finalSupabaseImageCount":  1
+                 },
+    "diagnostics":  [
+                        {
+                            "provider":  "OPEN_GRAPH",
+                            "originalUrl":  "https://static.tp-link.com/upload/image-line/Overview_Archer_AX55_01_large_20210816012555f.jpg",
+                            "originalHost":  "static.tp-link.com",
+                            "finalUrl":  "https://static.tp-link.com/upload/image-line/Overview_Archer_AX55_01_large_20210816012555f.jpg",
+                            "finalHost":  "static.tp-link.com",
+                            "httpStatus":  200,
+                            "declaredContentType":  "image/jpeg",
+                            "detectedFileType":  "jpeg",
+                            "byteCount":  189235,
+                            "originalWidth":  1000,
+                            "originalHeight":  1000,
+                            "outputWidth":  1000,
+                            "outputHeight":  1000,
+                            "candidateScore":  980,
+                            "reason":  "Image uploaded to Supabase.",
+                            "sharpResult":  "converted jpeg 1000x1000 to webp 1000x1000",
+                            "supabaseUploadResult":  "uploaded:catalogue-pilot/2026-07-18T12-14-30-009Z/tp-link/fe3a05f11fa87d010bef385317a8a5b4e7014522f76a1319b131d385e69464cc.webp",
+                            "state":  "IMAGE_READY"
+                        }
+                    ]
+}
+
+==================================================
+BRAND: Xerox
+REPORT: C:\ceter-technology\reports\ten-brand-image-pilot-2026-07-18T12-13-47-858Z.json
+==================================================
+{
+    "brand":  "Xerox",
+    "model":  "C315",
+    "provider":  null,
+    "originalImageUrl":  null,
+    "finalRemoteHost":  null,
+    "httpStatus":  null,
+    "detectedMIME":  null,
+    "originalDimensions":  null,
+    "outputDimensions":  null,
+    "sha256":  null,
+    "supabasePath":  null,
+    "verificationResult":  null,
+    "state":  "IMAGE_NOT_FOUND",
+    "failureReason":  "No trusted, identity-verified image candidates were accepted.",
+    "counters":  {
+                     "imageCandidatesDiscovered":  0,
+                     "remoteImagesDownloaded":  0,
+                     "imagesRejected":  0,
+                     "imagesUploaded":  0,
+                     "finalSupabaseImageCount":  0
+                 },
+    "diagnostics":  [
+
+                    ]
+}
+

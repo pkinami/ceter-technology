@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Download, FileSpreadsheet, Upload } from "lucide-react";
-import type { ImportKind, ImportPreview, ImportResult } from "@/lib/imports";
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import type { ImportPreview, ImportResult } from "@/lib/imports";
+import { useToast } from "@/components/ui/toast";
+import { isRecord, sanitizeOperationMessage } from "@/lib/feedback";
+import { readImportPreviewResponse } from "./import-preview-response";
 
 type RecentImport = {
   id: string;
@@ -17,94 +20,147 @@ type RecentImport = {
 type ImportState = {
   preview: ImportPreview | null;
   result: ImportResult | null;
-  loading: boolean;
+  loading: "preview" | "confirm" | null;
+  selectedFileName: string | null;
   message: string | null;
 };
+
+type AdminImportKind = "products" | "categories";
 
 const emptyState: ImportState = {
   preview: null,
   result: null,
-  loading: false,
+  loading: null,
+  selectedFileName: null,
   message: null,
 };
 
 export function ImportClient({ recentImports }: { recentImports: RecentImport[] }) {
-  const [states, setStates] = useState<Record<ImportKind, ImportState>>({
+  const { showToast, updateToast } = useToast();
+  const [states, setStates] = useState<Record<AdminImportKind, ImportState>>({
     products: emptyState,
     categories: emptyState,
-    "price-updates": emptyState,
-    "stock-updates": emptyState,
   });
 
-  async function previewImport(kind: ImportKind, formData: FormData) {
+  async function previewImport(kind: AdminImportKind, formData: FormData) {
+    if (states[kind].loading) return;
+    const file = formData.get("file");
+    const selectedFileName = file instanceof File ? file.name : null;
+    const toastId = showToast({ type: "loading", title: "Previewing file", message: selectedFileName ?? "Reading import file." });
     setStates((current) => ({
       ...current,
-      [kind]: { ...emptyState, loading: true },
+      [kind]: { ...emptyState, loading: "preview", selectedFileName },
     }));
     formData.set("kind", kind);
 
-    const response = await fetch("/api/admin/import/preview", {
-      method: "POST",
-      body: formData,
-    });
-    const payload = await response.json();
+    try {
+      const response = await fetch("/api/admin/import/preview", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await readImportPreviewResponse(response);
+      const success = response.ok && payload.success === true;
+      const message = sanitizeOperationMessage(payload.error, `Import preview failed with HTTP ${response.status}.`);
 
-    setStates((current) => ({
-      ...current,
-      [kind]: {
-        preview: payload.ok ? payload.preview : null,
-        result: null,
-        loading: false,
-        message: payload.ok ? null : payload.message,
-      },
-    }));
+      setStates((current) => ({
+        ...current,
+        [kind]: {
+          preview: success ? payload.preview ?? null : null,
+          result: null,
+          loading: null,
+          selectedFileName,
+          message: success ? null : message,
+        },
+      }));
+
+      if (success && payload.preview) {
+        updateToast(toastId, {
+          type: "success",
+          title: "Preview ready",
+          message: `${payload.preview.validRows} valid rows, ${payload.preview.errorRows} invalid rows.`,
+        });
+      } else {
+        updateToast(toastId, { type: "error", title: "Preview failed", message });
+      }
+    } catch (error) {
+      const message = sanitizeOperationMessage(error, "Import preview failed. Check the file and try again.");
+      setStates((current) => ({
+        ...current,
+        [kind]: { ...current[kind], loading: null, selectedFileName, message },
+      }));
+      updateToast(toastId, { type: "error", title: "Preview failed", message });
+    } finally {
+      setStates((current) => ({
+        ...current,
+        [kind]: { ...current[kind], loading: null },
+      }));
+    }
   }
 
-  async function confirmImport(kind: ImportKind) {
+  async function confirmImport(kind: AdminImportKind) {
     const preview = states[kind].preview;
-    if (!preview) return;
+    if (!preview || states[kind].loading) return;
 
+    const toastId = showToast({ type: "loading", title: "Importing products", message: `Importing ${preview.fileName}.` });
     setStates((current) => ({
       ...current,
-      [kind]: { ...current[kind], loading: true, message: null },
+      [kind]: { ...current[kind], loading: "confirm", message: null },
     }));
 
-    const response = await fetch("/api/admin/import/confirm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        kind,
-        fileName: preview.fileName,
-        rows: preview.rows,
-      }),
-    });
-    const payload = await response.json();
+    try {
+      const response = await fetch("/api/admin/import/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          fileName: preview.fileName,
+          rows: preview.rows,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as unknown;
+      const ok = response.ok && isRecord(payload) && payload.ok === true && isRecord(payload.result);
+      const result = ok ? (payload.result as ImportResult) : null;
+      const message = ok
+        ? null
+        : sanitizeOperationMessage(isRecord(payload) ? payload.message : null, `Import failed with HTTP ${response.status}.`);
 
-    setStates((current) => ({
-      ...current,
-      [kind]: {
-        ...current[kind],
-        result: payload.ok ? payload.result : null,
-        loading: false,
-        message: payload.ok ? null : payload.message,
-      },
-    }));
+      setStates((current) => ({
+        ...current,
+        [kind]: {
+          ...current[kind],
+          result,
+          loading: null,
+          message,
+        },
+      }));
 
+      if (result) {
+        updateToast(toastId, {
+          type: "success",
+          title: "Import complete",
+          message: `${result.imported} imported, ${result.failed} rejected.`,
+        });
+      } else {
+        updateToast(toastId, { type: "error", title: "Import failed", message: message ?? "Import failed." });
+      }
+    } catch (error) {
+      const message = sanitizeOperationMessage(error, "Import failed. No products were confirmed from this request.");
+      setStates((current) => ({
+        ...current,
+        [kind]: { ...current[kind], loading: null, message },
+      }));
+      updateToast(toastId, { type: "error", title: "Import failed", message });
+    } finally {
+      setStates((current) => ({
+        ...current,
+        [kind]: { ...current[kind], loading: null },
+      }));
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <ImportPanel
-          kind="products"
-          title="Import Products"
-          templateHref="/api/admin/import/template/products"
-          templateLabel="Download Product Import Template"
-          state={states.products}
-          onPreview={previewImport}
-          onConfirm={confirmImport}
-          onCancel={() => setStates((current) => ({ ...current, products: emptyState }))}
-        />
         <ImportPanel
           kind="categories"
           title="Import Categories"
@@ -116,24 +172,14 @@ export function ImportClient({ recentImports }: { recentImports: RecentImport[] 
           onCancel={() => setStates((current) => ({ ...current, categories: emptyState }))}
         />
         <ImportPanel
-          kind="price-updates"
-          title="Import Price Updates"
-          templateHref="/api/admin/import/template/price-updates"
-          templateLabel="Download Price Update Template"
-          state={states["price-updates"]}
+          kind="products"
+          title="Import Products"
+          templateHref="/api/admin/import/template/products"
+          templateLabel="Download Product Import Template"
+          state={states.products}
           onPreview={previewImport}
           onConfirm={confirmImport}
-          onCancel={() => setStates((current) => ({ ...current, "price-updates": emptyState }))}
-        />
-        <ImportPanel
-          kind="stock-updates"
-          title="Import Stock Updates"
-          templateHref="/api/admin/import/template/stock-updates"
-          templateLabel="Download Stock Update Template"
-          state={states["stock-updates"]}
-          onPreview={previewImport}
-          onConfirm={confirmImport}
-          onCancel={() => setStates((current) => ({ ...current, "stock-updates": emptyState }))}
+          onCancel={() => setStates((current) => ({ ...current, products: emptyState }))}
         />
       </div>
 
@@ -195,13 +241,13 @@ function ImportPanel({
   onConfirm,
   onCancel,
 }: {
-  kind: ImportKind;
+  kind: AdminImportKind;
   title: string;
   templateHref: string;
   templateLabel: string;
   state: ImportState;
-  onPreview: (kind: ImportKind, formData: FormData) => Promise<void>;
-  onConfirm: (kind: ImportKind) => Promise<void>;
+  onPreview: (kind: AdminImportKind, formData: FormData) => Promise<void>;
+  onConfirm: (kind: AdminImportKind) => Promise<void>;
   onCancel: () => void;
 }) {
   const readyLabel = useMemo(() => {
@@ -211,9 +257,7 @@ function ImportPanel({
         ? "products"
         : kind === "categories"
           ? "categories"
-          : kind === "price-updates"
-            ? "price updates"
-            : "stock updates";
+        : "categories";
     return `${count} ${noun} ready to import`;
   }, [kind, state.preview?.validRows]);
 
@@ -237,7 +281,7 @@ function ImportPanel({
         </a>
       </div>
 
-      <form action={(formData) => onPreview(kind, formData)} className="mt-6 grid gap-4">
+      <form action={(formData) => onPreview(kind, formData)} aria-busy={state.loading === "preview"} className="mt-6 grid gap-4">
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Upload Excel file
           <input
@@ -249,16 +293,28 @@ function ImportPanel({
           />
         </label>
         <button
-          disabled={state.loading}
+          disabled={state.loading !== null}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          <Upload className="h-4 w-4" />
-          {state.loading ? "Checking file..." : "Preview import"}
+          {state.loading === "preview" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          {state.loading === "preview" ? "Previewing file" : "Preview import"}
         </button>
       </form>
+      {state.selectedFileName ? (
+        <p className="mt-3 text-sm font-semibold text-slate-600" role="status" aria-live="polite">
+          Selected file: {state.selectedFileName}
+        </p>
+      ) : null}
+
+      {state.loading === "preview" ? (
+        <div className="mt-5 flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm font-semibold text-orange-800" role="status" aria-live="polite">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Previewing file
+        </div>
+      ) : null}
 
       {state.message ? (
-        <div className="mt-5 flex gap-2 rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+        <div className="mt-5 flex gap-2 rounded-md border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700" role="alert" aria-live="assertive">
           <AlertTriangle className="h-5 w-5 shrink-0" />
           {state.message}
         </div>
@@ -267,6 +323,7 @@ function ImportPanel({
       {state.preview ? (
         <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4">
           <h3 className="text-sm font-black text-slate-950">Import Preview</h3>
+          <p className="mt-2 text-sm font-semibold text-slate-600">File: {state.preview.fileName}</p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-4">
             <PreviewStat label="Rows detected" value={state.preview.totalRows} />
             <PreviewStat label="Valid" value={state.preview.validRows} />
@@ -293,24 +350,35 @@ function ImportPanel({
             </button>
             <button
               type="button"
-              disabled={state.loading || state.preview.validRows === 0}
+              disabled={state.loading !== null || state.preview.validRows === 0}
               onClick={() => onConfirm(kind)}
-              className="inline-flex min-h-10 items-center rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              aria-busy={state.loading === "confirm"}
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              Import {kind === "products" ? "Products" : kind === "categories" ? "Categories" : kind === "price-updates" ? "Price Updates" : "Stock Updates"}
+              {state.loading === "confirm" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {state.loading === "confirm" ? "Importing products" : `Import ${kind === "products" ? "Products" : "Categories"}`}
             </button>
           </div>
+          {state.loading === "confirm" ? (
+            <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-orange-700" role="status" aria-live="polite">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Importing products
+            </p>
+          ) : null}
         </div>
       ) : null}
 
       {state.result ? (
-        <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
-          Successfully imported: {state.result.imported}. Failed: {state.result.failed}.
+        <div className="mt-5 flex gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800" role="status" aria-live="polite">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          <span>
+          Successfully imported: {state.result.imported}. Rejected: {state.result.failed}.
           {state.result.failed > 0 ? (
             <a className="ml-2 underline" href={`/api/admin/import/error-report/${state.result.historyId}`}>
               Download error report
             </a>
           ) : null}
+          </span>
         </div>
       ) : null}
     </section>

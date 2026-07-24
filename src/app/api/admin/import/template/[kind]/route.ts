@@ -4,23 +4,19 @@ import { categoryTemplateHeaders, priceUpdateTemplateHeaders, productTemplateHea
 
 const productExample = [
   "HP LaserJet Pro M404dn",
-  "hp-laserjet-pro-m404dn",
-  "Business laser printer",
-  "Laser Printers",
   "HP",
+  "M404dn",
+  "SUP-HP-M404DN",
+  "Printers",
+  "Business laser printer",
+  "Print technology: Laser; Speed: 40 ppm; Connectivity: USB, Ethernet",
   45000,
-  42000,
   10,
-  5,
-  "TRUE",
-  "FALSE",
-  "TRUE",
-  "FALSE",
-  "ACTIVE",
-  "https://image-url.com/hp.jpg",
-  "product-images/printers",
-  "https://image-url.com/image2.jpg",
-  "Speed: 40 ppm; Connectivity: USB, Ethernet",
+  "HP Inc.",
+  "https://image-url.com/hp-front.jpg",
+  "https://image-url.com/hp-side.jpg",
+  "https://image-url.com/hp-detail.jpg",
+  "1 year manufacturer warranty",
 ];
 
 const categoryExample = [

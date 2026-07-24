@@ -1,5 +1,14 @@
 import type { InputJsonValue } from "@prisma/client/runtime/client.js";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma.ts";
+import {
+  normalizeProductImportRow,
+  normalizeOptionalImportNumber,
+  productImportTemplateHeaders,
+  normalizeStrictImportNumber,
+  validateProductImportPricing,
+  type ProductImportRowInput,
+} from "./product-import-normalization.ts";
+import { duplicateImportSkuKey, isValidUrl, validateProductReadiness } from "./product-validation.ts";
 
 export type ImportKind = "products" | "categories" | "price-updates" | "stock-updates";
 
@@ -9,26 +18,7 @@ export type ImportIssue = {
   errors: string[];
 };
 
-export type ProductImportRow = {
-  productName: string;
-  slug: string;
-  description: string;
-  category: string;
-  brand: string;
-  price: string;
-  discountPrice: string;
-  stockQuantity: string;
-  lowStockThreshold: string;
-  featured: string;
-  newArrival: string;
-  bestSeller: string;
-  promotion: string;
-  status: string;
-  productImageUrl: string;
-  productImageFolder: string;
-  additionalImageUrls: string;
-  technicalSpecifications: string;
-};
+export type ProductImportRow = ProductImportRowInput;
 
 export type CategoryImportRow = {
   categoryName: string;
@@ -106,24 +96,7 @@ export type ImportResult = {
 };
 
 export const productTemplateHeaders = [
-  "Product Name",
-  "Slug",
-  "Description",
-  "Category",
-  "Brand",
-  "Price",
-  "Discount Price",
-  "Stock Quantity",
-  "Low Stock Threshold",
-  "Featured",
-  "New Arrival",
-  "Best Seller",
-  "Promotion",
-  "Status",
-  "Product Image URL",
-  "Product Image Folder",
-  "Additional Image URLs",
-  "Technical Specifications",
+  ...productImportTemplateHeaders,
 ];
 
 export const categoryTemplateHeaders = [
@@ -150,9 +123,6 @@ export const stockUpdateTemplateHeaders = [
   "Low Stock Threshold",
   "Reason",
 ];
-
-const productStatuses = ["ACTIVE", "OUT_OF_STOCK", "DRAFT", "NEEDS_ATTENTION"] as const;
-type ProductBadgeImport = "FEATURED" | "NEW_ARRIVAL" | "BEST_SELLER" | "PROMOTION";
 
 function cell(row: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
@@ -196,22 +166,14 @@ async function uniqueSlug(model: "category" | "product", value: string) {
   }
 }
 
-function numberValue(value: string) {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+function numberValue(value: unknown) {
+  const parsed = normalizeOptionalImportNumber(value);
+  return parsed.ok ? parsed.value : null;
 }
 
 function integerValue(value: string) {
   const parsed = numberValue(value);
   return parsed !== null && Number.isInteger(parsed) ? parsed : null;
-}
-
-function booleanValue(value: string) {
-  return ["true", "yes", "1", "y"].includes(value.trim().toLowerCase());
 }
 
 function parseSpecifications(value: string) {
@@ -232,34 +194,22 @@ function parseSpecifications(value: string) {
   return pairs.length > 0 ? Object.fromEntries(pairs) : undefined;
 }
 
-function additionalUrls(value: string) {
-  return value
-    .split(/[,\r\n]+/)
-    .map((url) => url.trim())
-    .filter(Boolean);
+function importMediaData(url: string, isPrimary: boolean) {
+  return {
+    url,
+    fileName: url.split("/").pop()?.split("?")[0] || "product-image",
+    fileType: url.match(/\.(mp4|mov|webm)(\?|$)/i) ? "video/external" : "image/external",
+    fileSize: 0,
+    storagePath: url,
+    type: "IMAGE" as const,
+    source: "IMPORT",
+    isPrimary,
+    metadata: { importedUrl: url },
+  };
 }
 
 function productRow(raw: Record<string, unknown>): ProductImportRow {
-  return {
-    productName: cell(raw, "Product Name", "Name"),
-    slug: cell(raw, "Slug"),
-    description: cell(raw, "Description"),
-    category: cell(raw, "Category", "Category Name"),
-    brand: cell(raw, "Brand"),
-    price: cell(raw, "Price"),
-    discountPrice: cell(raw, "Discount Price"),
-    stockQuantity: cell(raw, "Stock Quantity", "Stock"),
-    lowStockThreshold: cell(raw, "Low Stock Threshold"),
-    featured: cell(raw, "Featured"),
-    newArrival: cell(raw, "New Arrival"),
-    bestSeller: cell(raw, "Best Seller"),
-    promotion: cell(raw, "Promotion"),
-    status: cell(raw, "Status"),
-    productImageUrl: cell(raw, "Product Image URL", "Image URL"),
-    productImageFolder: cell(raw, "Product Image Folder"),
-    additionalImageUrls: cell(raw, "Additional Image URLs"),
-    technicalSpecifications: cell(raw, "Technical Specifications", "Specifications"),
-  };
+  return normalizeProductImportRow(raw);
 }
 
 function categoryRow(raw: Record<string, unknown>): CategoryImportRow {
@@ -328,10 +278,8 @@ async function previewUpdateImport(
     seen.add(lookup);
 
     if (kind === "price-updates") {
-      const price = numberValue((row as PriceUpdateImportRow).price);
-      const discountPrice = numberValue((row as PriceUpdateImportRow).discountPrice);
-      if (price === null || price < 0) rowErrors.push("Price must be a valid non-negative number.");
-      if (discountPrice !== null && discountPrice < 0) rowErrors.push("Discount Price must be a valid non-negative number.");
+      const pricing = validateProductImportPricing(row as PriceUpdateImportRow);
+      rowErrors.push(...pricing.errors);
     } else {
       const stock = integerValue((row as StockUpdateImportRow).stockQuantity);
       const threshold = integerValue((row as StockUpdateImportRow).lowStockThreshold || "5");
@@ -362,39 +310,46 @@ export function previewStockUpdateImport(fileName: string, rows: StockUpdateImpo
   return previewUpdateImport("stock-updates", fileName, rows);
 }
 
-export async function previewProductImport(fileName: string, rows: ProductImportRow[]): Promise<ImportPreview> {
-  const [categories, products] = await Promise.all([
-    prisma.category.findMany({ select: { id: true, name: true, slug: true } }),
-    prisma.product.findMany({ select: { name: true, slug: true } }),
-  ]);
+export function previewProductImportWithCatalogue(
+  fileName: string,
+  rows: ProductImportRow[],
+  categories: Array<{ name: string; slug: string }>,
+  products: Array<{ name: string; slug: string; sku?: string | null }>,
+): ImportPreview {
   const categoryKeys = new Set(categories.flatMap((category) => [category.name.toLowerCase(), category.slug.toLowerCase()]));
   const existingProductKeys = new Set(products.flatMap((product) => [product.name.toLowerCase(), product.slug.toLowerCase()]));
   const seen = new Set<string>();
+  const seenSku = new Set<string>();
   let duplicateRecords = 0;
   const errors: ImportIssue[] = [];
 
   rows.forEach((row, index) => {
     const rowErrors: string[] = [];
-    const identifier = row.slug || row.productName || `Row ${index + 2}`;
+    const identifier = row.productName || row.supplierSku || row.modelNumber || `Row ${index + 2}`;
     const nameKey = row.productName.toLowerCase();
-    const slugKey = (row.slug || slugify(row.productName)).toLowerCase();
-    const price = numberValue(row.price);
-    const discountPrice = numberValue(row.discountPrice);
-    const stock = integerValue(row.stockQuantity);
-    const threshold = integerValue(row.lowStockThreshold || "5");
-    const status = (row.status || "DRAFT").toUpperCase();
+    const slugKey = slugify(row.productName).toLowerCase();
+    const pricing = validateProductImportPricing(row);
+    const stock = integerValue(row.stock);
+    const skuKey = row.supplierSku ? duplicateImportSkuKey(row.supplierSku) : "";
 
-    if (!row.productName) rowErrors.push("Product Name is required.");
-    if (!row.category) rowErrors.push("Category is required.");
-    if (!row.brand) rowErrors.push("Brand is required.");
-    if (!row.price) rowErrors.push("Price is required.");
-    if (!row.stockQuantity) rowErrors.push("Stock Quantity is required.");
-    if (price === null || price < 0) rowErrors.push("Price must be a valid non-negative number.");
-    if (discountPrice !== null && discountPrice < 0) rowErrors.push("Discount Price must be a valid non-negative number.");
-    if (stock === null || stock < 0) rowErrors.push("Stock Quantity must be a valid non-negative whole number.");
-    if (threshold === null || threshold < 0) rowErrors.push("Low Stock Threshold must be a valid non-negative whole number.");
+    const readiness = validateProductReadiness({
+      name: row.productName,
+      brand: row.brand,
+      modelNumber: row.modelNumber,
+      sku: row.supplierSku,
+      categoryName: row.category,
+      description: row.description,
+      specifications: row.specifications,
+      price: pricing.price.ok ? pricing.price.value : row.price,
+      stock,
+      manufacturer: row.manufacturer,
+      imageUrl: row.productImage1Url,
+      media: [row.productImage2Url, row.productImage3Url].filter(Boolean).map((url) => ({ url })),
+      warranty: row.warranty,
+    });
+    rowErrors.push(...readiness.issues.map((issue) => issue.message));
     if (row.category && !categoryKeys.has(row.category.toLowerCase())) rowErrors.push(`Category "${row.category}" does not exist.`);
-    if (!productStatuses.includes(status as (typeof productStatuses)[number])) rowErrors.push("Status must be ACTIVE, OUT_OF_STOCK, NEEDS_ATTENTION, or DRAFT.");
+    if (row.productImage3Url && !isValidUrl(row.productImage3Url)) rowErrors.push("Product Image 3 URL must be a valid http or https URL.");
 
     const duplicateKey = `${nameKey}|${slugKey}`;
     if (existingProductKeys.has(nameKey) || existingProductKeys.has(slugKey) || seen.has(duplicateKey)) {
@@ -402,6 +357,11 @@ export async function previewProductImport(fileName: string, rows: ProductImport
       rowErrors.push("Duplicate product name or slug.");
     }
     seen.add(duplicateKey);
+    if (skuKey && seenSku.has(skuKey)) {
+      duplicateRecords += 1;
+      rowErrors.push("Supplier SKU must be unique.");
+    }
+    if (skuKey) seenSku.add(skuKey);
 
     if (rowErrors.length > 0) {
       errors.push({ row: index + 2, identifier, errors: rowErrors });
@@ -417,6 +377,32 @@ export async function previewProductImport(fileName: string, rows: ProductImport
     duplicateRecords,
     rows,
     errors,
+  };
+}
+
+export async function previewProductImport(fileName: string, rows: ProductImportRow[]): Promise<ImportPreview> {
+  const [categories, products] = await Promise.all([
+    prisma.category.findMany({ select: { id: true, name: true, slug: true } }),
+    prisma.product.findMany({ select: { name: true, slug: true, sku: true } }),
+  ]);
+
+  const preview = previewProductImportWithCatalogue(fileName, rows, categories, products);
+  const existingSkus = new Set(products.map((product) => product.sku?.trim().toLowerCase()).filter(Boolean) as string[]);
+  const rowsAlreadyInvalid = new Set(preview.errors.map((error) => error.row));
+  const extraErrors = rows.flatMap((row, index) => {
+    const key = row.supplierSku.trim().toLowerCase();
+    return key && existingSkus.has(key)
+      ? [{ row: index + 2, identifier: row.productName || row.supplierSku || row.modelNumber || `Row ${index + 2}`, errors: ["Supplier SKU must be unique."] }]
+      : [];
+  });
+  if (extraErrors.length === 0) return preview;
+  const newlyInvalidRows = extraErrors.filter((error) => !rowsAlreadyInvalid.has(error.row)).length;
+  return {
+    ...preview,
+    validRows: preview.validRows - newlyInvalidRows,
+    errorRows: preview.errorRows + newlyInvalidRows,
+    duplicateRecords: preview.duplicateRecords + extraErrors.length,
+    errors: [...preview.errors, ...extraErrors],
   };
 }
 
@@ -541,36 +527,61 @@ export async function importProducts(adminId: string, fileName: string, rows: Pr
         throw new Error(`Category "${row.category}" does not exist.`);
       }
 
-      const badges = [
-        booleanValue(row.featured) ? "FEATURED" : null,
-        booleanValue(row.newArrival) ? "NEW_ARRIVAL" : null,
-        booleanValue(row.bestSeller) ? "BEST_SELLER" : null,
-        booleanValue(row.promotion) ? "PROMOTION" : null,
-      ].filter((badge): badge is ProductBadgeImport => Boolean(badge));
-      const galleryUrls = additionalUrls(row.additionalImageUrls);
-      const imageUrl = row.productImageUrl || null;
-      const status = (row.status || "DRAFT").toUpperCase() as (typeof productStatuses)[number];
+      const price = normalizeStrictImportNumber(row.price);
 
-      await prisma.product.create({
+      if (!price.ok) {
+        throw new Error("Product price values failed validation before import.");
+      }
+
+      const imageUrls = [row.productImage1Url, row.productImage2Url, row.productImage3Url].filter(Boolean);
+      const product = await prisma.product.create({
         data: {
           name: row.productName,
-          slug: await uniqueSlug("product", row.slug || row.productName),
+          slug: await uniqueSlug("product", row.productName),
           description: row.description || "",
           brand: row.brand,
-          price: Number(row.price).toFixed(2),
-          discountPrice: row.discountPrice ? Number(row.discountPrice).toFixed(2) : null,
-          stock: Number(row.stockQuantity),
-          lowStockThreshold: row.lowStockThreshold ? Number(row.lowStockThreshold) : 5,
-          status,
-          badges,
-          imageUrl,
-          specifications: parseSpecifications(row.technicalSpecifications) as InputJsonValue | undefined,
+          sku: row.supplierSku || null,
+          modelNumber: row.modelNumber || null,
+          manufacturer: row.manufacturer || null,
+          manufacturerProductUrl: null,
+          datasheetUrl: null,
+          warranty: row.warranty || null,
+          barcode: null,
+          price: price.value,
+          discountPrice: null,
+          stock: Number(row.stock),
+          lowStockThreshold: 5,
+          status: "DRAFT",
+          badges: [],
+          imageUrl: row.productImage1Url || null,
+          imageFolder: null,
+          specifications: parseSpecifications(row.specifications) as InputJsonValue | undefined,
           categoryId,
-          media: {
-            create: [
-              ...(imageUrl ? [externalMediaData(imageUrl)] : []),
-              ...galleryUrls.map((url) => externalMediaData(url)),
-            ],
+          ...(imageUrls.length > 0
+            ? {
+                media: {
+                  create: imageUrls.map((url, imageIndex) => importMediaData(url, imageIndex === 0)),
+                },
+              }
+            : {}),
+        },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          actorName: "Import",
+          action: "Imported product as draft",
+          module: "products",
+          entityType: "Product",
+          entityId: product.id,
+          metadata: {
+            fileName,
+            row: index + 2,
+            importedStatus: "DRAFT",
+            productImage1Url: row.productImage1Url || null,
+            productImage2Url: row.productImage2Url || null,
+            productImage3Url: row.productImage3Url || null,
           },
         },
       });
@@ -579,7 +590,7 @@ export async function importProducts(adminId: string, fileName: string, rows: Pr
     } catch (error) {
       errors.push({
         row: index + 2,
-        identifier: row.slug || row.productName,
+        identifier: row.productName || row.supplierSku || row.modelNumber,
         errors: [error instanceof Error ? error.message : "Failed to import product."],
       });
     }
@@ -610,20 +621,25 @@ export async function importPriceUpdates(adminId: string, fileName: string, rows
     try {
       const product = await prisma.product.findFirstOrThrow({ where: productLookupWhere(row) });
       const previousPrice = product.price;
+      const price = normalizeStrictImportNumber(row.price);
+      const discountPrice = normalizeOptionalImportNumber(row.discountPrice);
+      if (!price.ok || !discountPrice.ok || (discountPrice.value !== null && discountPrice.value >= price.value)) {
+        throw new Error("Product price values failed validation before import.");
+      }
       await prisma.product.update({
         where: { id: product.id },
         data: {
-          price: Number(row.price).toFixed(2),
-          discountPrice: row.discountPrice ? Number(row.discountPrice).toFixed(2) : null,
+          price: price.value,
+          discountPrice: discountPrice.value,
         },
       });
       await prisma.priceHistory.create({
         data: {
           productId: product.id,
           source: "bulk-import",
-          recommendedPrice: Number(row.price).toFixed(2),
+          recommendedPrice: price.value,
           targetMarginPercent: 0,
-          reason: row.reason || `Bulk price update from ${previousPrice.toString()} to ${Number(row.price).toFixed(2)}`,
+          reason: row.reason || `Bulk price update from ${previousPrice.toString()} to ${price.value.toFixed(2)}`,
         },
       });
       imported += 1;
@@ -653,7 +669,6 @@ export async function importStockUpdates(adminId: string, fileName: string, rows
         data: {
           stock: nextStock,
           lowStockThreshold: row.lowStockThreshold ? Number(row.lowStockThreshold) : product.lowStockThreshold,
-          status: nextStock <= 0 ? "OUT_OF_STOCK" : product.status === "OUT_OF_STOCK" ? "ACTIVE" : product.status,
         },
       });
       await prisma.stockMovement.create({
@@ -671,19 +686,6 @@ export async function importStockUpdates(adminId: string, fileName: string, rows
 
   const history = await createImportHistory(adminId, "stock-updates", fileName, rows.length, imported, errors);
   return { imported, failed: rows.length - imported, totalRows: rows.length, errors, historyId: history.id };
-}
-
-function externalMediaData(url: string) {
-  const fileType = url.match(/\.(mp4|mov|webm)(\?|$)/i) ? "video/external" : "image/external";
-
-  return {
-    url,
-    fileName: url.split("/").pop()?.split("?")[0] || "external-media",
-    fileType,
-    fileSize: 0,
-    storagePath: url,
-    type: fileType.startsWith("video") ? "VIDEO" : "IMAGE",
-  } as const;
 }
 
 async function createImportHistory(

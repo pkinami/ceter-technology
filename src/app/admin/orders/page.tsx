@@ -7,8 +7,8 @@ import { addOrderIssue, updateOrderDetails, updateOrderStatus } from "../actions
 import { formatDate, money } from "../utils";
 
 export const metadata: Metadata = {
-  title: "Admin Orders",
-  description: "View and manage CETER Technology customer orders.",
+  title: "Orders",
+  description: "Manage CETER Technology customer orders, notes, and fulfillment status.",
 };
 
 const orderStatuses = [
@@ -64,7 +64,12 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   });
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <p className="text-xs font-black uppercase tracking-wide text-orange-600">Orders</p>
+        <h1 className="text-2xl font-black text-slate-950">Customer orders and fulfillment</h1>
+        <p className="mt-1 text-sm text-slate-500">Review orders, update fulfillment, edit delivery details, and record internal handling notes.</p>
+      </div>
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">

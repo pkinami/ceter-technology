@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 
 const schema = z.object({
   name: z.string().min(2, "Enter your name"),
@@ -16,6 +18,8 @@ const schema = z.object({
 type ContactFormData = z.infer<typeof schema>;
 
 export function ContactForm() {
+  const { showToast } = useToast();
+  const [sending, setSending] = useState(false);
   const {
     register,
     handleSubmit,
@@ -25,12 +29,19 @@ export function ContactForm() {
     resolver: zodResolver(schema),
   });
 
-  function onSubmit() {
-    reset();
+  async function onSubmit() {
+    if (sending) return;
+    setSending(true);
+    try {
+      showToast({ type: "success", title: "Message captured", message: "Connect this form to email or CRM in production." });
+      reset();
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} aria-busy={sending} className="grid gap-4">
       {(["name", "email", "phone"] as const).map((field) => (
         <label key={field} className="grid gap-2 text-sm font-semibold">
           {field === "name" ? "Name" : field === "email" ? "Email" : "Phone"}
@@ -39,7 +50,7 @@ export function ContactForm() {
             className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
           />
           {errors[field] ? (
-            <span className="text-xs text-red-600">{errors[field]?.message}</span>
+            <span className="text-xs text-red-600" role="alert">{errors[field]?.message}</span>
           ) : null}
         </label>
       ))}
@@ -51,17 +62,17 @@ export function ContactForm() {
           className="rounded-md border border-slate-200 px-3 py-3 outline-none focus:border-orange-500"
         />
         {errors.message ? (
-          <span className="text-xs text-red-600">{errors.message.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.message.message}</span>
         ) : null}
       </label>
       {isSubmitSuccessful ? (
-        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700" role="status" aria-live="polite">
           Message captured. Connect this form to email or CRM in production.
         </p>
       ) : null}
-      <Button type="submit" className="w-fit">
-        <Send className="h-4 w-4" />
-        Send Message
+      <Button type="submit" className="w-fit" disabled={sending}>
+        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        {sending ? "Sending request" : "Send Message"}
       </Button>
     </form>
   );

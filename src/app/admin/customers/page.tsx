@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
@@ -7,7 +6,7 @@ import { formatDate, money } from "../utils";
 
 export const metadata: Metadata = {
   title: "Admin Customers",
-  description: "View customers and manage CETER Technology user roles.",
+  description: "View CETER Technology customer accounts.",
 };
 
 export default async function AdminCustomersPage() {
@@ -15,7 +14,6 @@ export default async function AdminCustomersPage() {
   const users = await prisma.user.findMany({
     include: {
       orders: true,
-      roleAssignments: { include: { role: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -26,9 +24,9 @@ export default async function AdminCustomersPage() {
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-orange-500" />
           <div>
-            <h2 className="text-xl font-black text-slate-950">Customers and admins</h2>
+            <h2 className="text-xl font-black text-slate-950">Customer accounts</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Review customer accounts. Role assignment has moved to the dedicated user management page.
+              Review customer accounts and order history. Admin delegation is not exposed in single-owner mode.
             </p>
           </div>
         </div>
@@ -42,7 +40,7 @@ export default async function AdminCustomersPage() {
                 <th className="py-3 pr-4">Orders</th>
                 <th className="py-3 pr-4">Total spent</th>
                 <th className="py-3 pr-4">Joined</th>
-                <th className="py-3">Access</th>
+                <th className="py-3">Owner</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -67,16 +65,7 @@ export default async function AdminCustomersPage() {
                     <td className="py-4 pr-4 font-bold text-slate-950">{money(totalSpent)}</td>
                     <td className="py-4 pr-4 text-slate-500">{formatDate(user.createdAt)}</td>
                     <td className="py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {user.roleAssignments.map((assignment) => (
-                          <span key={assignment.id} className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
-                            {assignment.role.name}
-                          </span>
-                        ))}
-                        {user.roleAssignments.length === 0 ? (
-                          <span className="text-sm text-slate-500">Customer</span>
-                        ) : null}
-                      </div>
+                      <span className="text-sm text-slate-500">{user.id === admin.id ? "Owner admin" : "Customer"}</span>
                     </td>
                   </tr>
                 );
@@ -88,11 +77,6 @@ export default async function AdminCustomersPage() {
           ) : null}
         </div>
       </div>
-      {admin.permissions.has("users.view") ? (
-        <Link href="/admin/users" className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800">
-          Manage admin users
-        </Link>
-      ) : null}
     </section>
   );
 }

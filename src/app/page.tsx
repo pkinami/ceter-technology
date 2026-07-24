@@ -12,10 +12,15 @@ import {
 } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
+import { NewsletterForm } from "@/components/marketing/newsletter-form";
+import { HomepageOfferCarousel, type HomepageOfferSlide } from "@/components/marketing/homepage-offer-carousel";
+import { PublicActionForm } from "@/components/forms/public-action-form";
+import { SearchSubmitButton } from "@/components/forms/search-submit-button";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
 import { submitQuoteRequest } from "@/app/actions";
 import { prisma } from "@/lib/prisma";
 import { marketplaceDepartments, marketplaceHighlights } from "@/lib/marketplace";
-import { getPublicProductShelf } from "@/lib/catalog";
+import { getCatalogueCategories, getPublicProductShelf } from "@/lib/catalog";
 
 const defaultHero = {
   title: "CETER Technology Marketplace",
@@ -74,10 +79,15 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const now = new Date();
-  const [products, banners, promotions, testimonials] = await Promise.all([
-    getPublicProductShelf(120),
+  const [products, banners, promotions, testimonials, categories] = await Promise.all([
+    getPublicProductShelf(180),
     prisma.homepageBanner.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        approvalStatus: "APPROVED",
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ expiresAt: null }, { expiresAt: { gte: now } }] }],
+      },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 1,
     }),
@@ -95,14 +105,59 @@ export default async function Home() {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       take: 3,
     }),
+    getCatalogueCategories(),
   ]);
 
-  const hero = banners[0] ?? defaultHero;
+  const selectedHero = banners[0];
+  const hero = selectedHero ? { ...selectedHero, imageUrl: selectedHero.desktopImageUrl ?? selectedHero.imageUrl } : defaultHero;
   const printerProducts = productShelf(products, ["printer", "laser", "inkjet", "multifunction", "photocopier"]);
+  const kyoceraProducts = productShelf(products, ["kyocera", "ecosys", "taskalfa"]);
+  const hpProducts = productShelf(products, ["hp", "laserjet", "hewlett", "original toner"]);
+  const multifunction = productShelf(products, ["multifunction", "mfp", "photocopier", "scan", "copy"]);
   const consumables = productShelf(products, ["toner", "ink", "cartridge", "bottle", "drum"]);
   const computers = productShelf(products, ["laptop", "desktop", "computer", "workstation", "server"]);
   const networking = productShelf(products, ["router", "switch", "access point", "wifi", "cctv", "ups"]);
+  const recentlyAdded = products.slice(0, 4);
+  const bestSellers = products
+    .filter((product) => product.badges.includes("BEST_SELLER"))
+    .slice(0, 4);
+  const currentPromotions = products
+    .filter((product) => product.badges.includes("PROMOTION") || product.discountPrice)
+    .slice(0, 4);
   const activePromotions = promotions.length > 0 ? promotions : fallbackPromotions;
+  const carouselProductPool = [
+    ...currentPromotions,
+    ...products.filter((product) => product.badges.includes("FEATURED")),
+    ...products.filter((product) => product.badges.includes("BEST_SELLER")),
+    ...products.filter((product) => product.badges.includes("NEW_ARRIVAL")),
+    ...recentlyAdded,
+  ];
+  const carouselSlides: HomepageOfferSlide[] = [
+    ...promotions.map((promotion) => ({
+      id: `promotion-${promotion.id}`,
+      imageUrl: promotion.imageUrl,
+      heading: promotion.title,
+      text: promotion.description ?? "Current CETER Technologies offer with live catalogue availability.",
+      price: null,
+      discountPrice: null,
+      primaryHref: promotion.ctaLink,
+      primaryLabel: promotion.ctaLabel || "Shop Now",
+      quoteHref: "/request-a-quote",
+      showQuote: true,
+    })),
+    ...Array.from(new Map(carouselProductPool.map((product) => [product.id, product])).values()).slice(0, 8).map((product) => ({
+      id: `product-${product.id}`,
+      imageUrl: product.imageUrl,
+      heading: product.badges.includes("NEW_ARRIVAL") ? `New arrival: ${product.name}` : product.badges.includes("BEST_SELLER") ? `Best seller: ${product.name}` : product.discountPrice ? `Current deal: ${product.name}` : `Featured: ${product.name}`,
+      text: `${product.brand ? `${product.brand} ` : ""}${product.categoryPath}. ${product.availability}.`,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      primaryHref: `/products/${product.slug}`,
+      primaryLabel: "View Product",
+      quoteHref: `/request-a-quote?product=${encodeURIComponent(product.name)}`,
+      showQuote: product.price >= 50000 || product.availability === "Out of stock",
+    })),
+  ].slice(0, 10);
 
   return (
     <div className="bg-slate-50">
@@ -130,9 +185,7 @@ export default async function Home() {
                   placeholder="Search by product, printer model, toner number, cartridge number, brand, or SKU"
                   className="h-12 w-full rounded-md border-0 pl-11 pr-32 text-sm font-semibold text-slate-950"
                 />
-                <button className="absolute right-1 top-1/2 h-10 -translate-y-1/2 rounded-md bg-orange-500 px-4 text-sm font-black text-white hover:bg-orange-600">
-                  Search
-                </button>
+                <SearchSubmitButton className="absolute right-1 top-1/2 h-10 -translate-y-1/2 rounded-md bg-orange-500 px-4 text-white hover:bg-orange-600" />
               </label>
             </form>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -142,9 +195,17 @@ export default async function Home() {
                 </Link>
               ))}
             </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href="/products?q=printer">Shop Printers</ButtonLink>
+              <ButtonLink href="/products?q=toner" variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">Shop Toners</ButtonLink>
+              <ButtonLink href="/request-a-quote" variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">Request a Quote</ButtonLink>
+              <ButtonLink href="/contact" variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">WhatsApp</ButtonLink>
+            </div>
           </div>
         </div>
       </section>
+
+      <HomepageOfferCarousel slides={carouselSlides} />
 
       <section className="border-b border-slate-200 bg-white py-4">
         <div className="mx-auto grid max-w-7xl gap-3 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
@@ -209,9 +270,15 @@ export default async function Home() {
       </section>
 
       {[
-        ["Toner, ink, and printer accessories", "Find consumables by printer brand, model, toner number, or cartridge number.", consumables, "/products?q=toner"],
-        ["Computers and office workstations", "Laptops, desktops, monitors, servers, and business accessories.", computers, "/products?category=Computers%20%26%20Laptops"],
-        ["Networking, power, and security", "Routers, switches, WiFi, CCTV, access control, UPS, and installation supplies.", networking, "/products?category=Networking%20Equipment"],
+        ["Kyocera Business Solutions", "Kyocera printers, photocopiers, and consumables where available in the live catalogue.", kyoceraProducts, "/products?q=Kyocera"],
+        ["HP Printers and Original Toners", "HP printers, LaserJet options, and HP toner searches from current catalogue records.", hpProducts, "/products?q=HP"],
+        ["Multifunction Printers", "Print, scan, copy, and office document workflow devices.", multifunction, "/products?q=multifunction"],
+        ["Toners and Consumables", "Find consumables by printer brand, model, toner number, or cartridge number.", consumables, "/products?q=toner"],
+        ["Computers and Accessories", "Laptops, desktops, monitors, servers, and business accessories.", computers, "/products?q=computer"],
+        ["Networking and Power Solutions", "Routers, switches, WiFi, CCTV, access control, UPS, and installation supplies.", networking, "/products?q=networking"],
+        ["Recently Added Products", "Latest active catalogue items from the live database.", recentlyAdded, "/products?sort=newest"],
+        ["Best Sellers", "Products marked as best sellers in the catalogue.", bestSellers.length ? bestSellers : printerProducts, "/products?q=best"],
+        ["Current Promotions", "Discounted or promotion-tagged items currently available.", currentPromotions.length ? currentPromotions : products.slice(0, 4), "/products?sort=price-low"],
       ].map(([title, subtitle, shelf, href]) => (
         <section key={title as string} className="bg-white py-12 even:bg-slate-50">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -251,6 +318,28 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="bg-white py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-orange-600">Category discovery</p>
+              <h2 className="mt-2 text-3xl font-black text-slate-950">Browse live catalogue departments</h2>
+            </div>
+            <ButtonLink href="/products" variant="outline">View all categories</ButtonLink>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.filter((category) => category.productCount > 0).slice(0, 12).map((category) => (
+              <Link key={category.id} href={`/products?category=${encodeURIComponent(category.slug)}`} className="rounded-md border border-slate-200 bg-slate-50 p-4 hover:border-orange-200 hover:bg-orange-50">
+                <span className="text-sm font-black text-slate-950">{category.name}</span>
+                <span className="mt-2 block text-xs font-semibold text-slate-500">
+                  {category.parentName ? `${category.parentName} | ` : ""}{category.productCount} products
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="request-quote" className="bg-white py-14">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div>
@@ -275,7 +364,12 @@ export default async function Home() {
               })}
             </div>
           </div>
-          <form action={submitQuoteRequest} className="grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-sm">
+          <PublicActionForm
+            action={submitQuoteRequest}
+            pendingLabel="Sending request"
+            successMessage="Quote request received. CETER Technologies will follow up."
+            className="grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-sm"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <input name="name" required placeholder="Name" className="rounded-md border border-slate-300 bg-white px-3 py-3" />
               <input name="company" placeholder="Company or organization" className="rounded-md border border-slate-300 bg-white px-3 py-3" />
@@ -284,10 +378,29 @@ export default async function Home() {
             </div>
             <input name="productInterest" placeholder="Product, printer model, toner number, or service needed" className="rounded-md border border-slate-300 bg-white px-3 py-3" />
             <textarea name="message" required rows={5} placeholder="Quantity, delivery location, compatibility needs, or project details" className="rounded-md border border-slate-300 bg-white px-3 py-3" />
-            <button className="inline-flex min-h-11 w-fit items-center justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-black text-white hover:bg-orange-600">
-              Submit quote request
-            </button>
-          </form>
+            <PendingSubmitButton idleLabel="Submit quote request" pendingLabel="Sending request" className="w-fit" />
+          </PublicActionForm>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 py-14">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
+          <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-black uppercase tracking-wide text-orange-600">Installation and repair</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">Printer setup, maintenance, and repair support</h2>
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              Request help with printer installation, networking, driver setup, paper-feed issues, print-quality faults, scheduled servicing, and procurement planning.
+            </p>
+            <ButtonLink href="/request-service" className="mt-5 w-fit">Request service</ButtonLink>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-black uppercase tracking-wide text-orange-600">Customer trust</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">Procurement support without invented claims</h2>
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              Product availability, delivery charges, warranty terms, installation scope, and compatibility are confirmed against the selected item before dispatch or quotation.
+            </p>
+            <ButtonLink href="/contact" variant="outline" className="mt-5 w-fit">Contact CETER</ButtonLink>
+          </div>
         </div>
       </section>
 
@@ -325,6 +438,19 @@ export default async function Home() {
           </div>
         </section>
       ) : null}
+
+      <section className="bg-slate-950 py-14 text-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-orange-300">Newsletter</p>
+            <h2 className="mt-2 text-3xl font-black">Catalogue and procurement updates</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-300">Receive CETER product, service, and promotion updates by email.</p>
+          </div>
+          <div className="rounded-md bg-white p-4">
+            <NewsletterForm source="homepage" />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

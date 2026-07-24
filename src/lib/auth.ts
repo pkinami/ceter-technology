@@ -34,17 +34,7 @@ export const getCurrentUser = cache(async () => {
 });
 
 export async function requireAdmin() {
-  const { requireAnyPermission } = await import("@/lib/rbac");
+  const { requireOwnerSuperAdmin } = await import("@/lib/rbac");
 
-  return requireAnyPermission(
-    ["PRODUCTS", "VIEW"],
-    ["ORDERS", "VIEW"],
-    ["CUSTOMERS", "VIEW"],
-    ["REPORTS", "VIEW"],
-    ["SETTINGS", "MANAGE"],
-    ["USERS", "VIEW"],
-    ["ROLES", "VIEW"],
-    ["PERMISSIONS", "VIEW"],
-    ["MARKETING", "MANAGE"],
-  );
+  return requireOwnerSuperAdmin();
 }

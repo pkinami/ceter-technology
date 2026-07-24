@@ -1,0 +1,204 @@
+{
+  "generatedAt": "2026-07-18T12:00:26.288Z",
+  "timestamp": "2026-07-18T12-00-03-078Z",
+  "state": "PILOT_FAILED",
+  "dbMode": false,
+  "keepImages": true,
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_READY",
+    "checks": [
+      {
+        "component": "Icecat connection",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "icecat_id",
+            "content"
+          ],
+          "responseProductId": "30003204"
+        }
+      },
+      {
+        "component": "Icecat HP identifier probe",
+        "ok": true,
+        "diagnostics": {
+          "responseStatus": 200,
+          "icecatMessage": "OK",
+          "contentErrors": null,
+          "requestParameterNames": [
+            "lang",
+            "shopname",
+            "Brand",
+            "ProductCode",
+            "content"
+          ],
+          "responseProductId": "120832671"
+        },
+        "failureReason": null
+      },
+      {
+        "component": "Supabase temporary upload/read/delete",
+        "ok": true,
+        "path": "catalogue-pilot/preflight/2026-07-18T12-00-03-078Z-edfad1974cdd.webp",
+        "status": 200,
+        "deleted": true
+      }
+    ]
+  },
+  "passCriteria": {
+    "attemptedRows": 1,
+    "selectedRows": 1,
+    "readyCount": 0
+  },
+  "counts": {
+    "IMAGE_READY": 0,
+    "IMAGE_NOT_FOUND": 0,
+    "IMAGE_RESTRICTED": 0,
+    "IMAGE_RETRYABLE": 0,
+    "IMAGE_INVALID": 1,
+    "IMAGE_UPLOAD_FAILED": 0
+  },
+  "cleanup": {
+    "attempted": false,
+    "deleted": [],
+    "error": null
+  },
+  "rows": [
+    {
+      "brand": "Brother",
+      "model": "DCP-L2540DW",
+      "provider": "PAGE_IMAGE",
+      "originalImageUrl": "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+      "finalRemoteHost": "assets.brother.com",
+      "httpStatus": 200,
+      "detectedMIME": null,
+      "originalDimensions": null,
+      "outputDimensions": null,
+      "sha256": null,
+      "supabasePath": null,
+      "verificationResult": null,
+      "state": "IMAGE_INVALID",
+      "failureReason": "Unsupported or corrupt image format: heif.",
+      "counters": {
+        "imageCandidatesDiscovered": 5,
+        "remoteImagesDownloaded": 5,
+        "imagesRejected": 5,
+        "imagesUploaded": 0,
+        "finalSupabaseImageCount": 0
+      },
+      "diagnostics": [
+        {
+          "provider": "JSON_LD",
+          "originalUrl": "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:1360",
+          "originalHost": "assets.brother.com",
+          "finalUrl": "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:1360",
+          "finalHost": "assets.brother.com",
+          "httpStatus": 200,
+          "declaredContentType": "image/avif",
+          "detectedFileType": null,
+          "byteCount": 14811,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 1000,
+          "reason": "Unsupported or corrupt image format: heif.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        },
+        {
+          "provider": "PAGE_IMAGE",
+          "originalUrl": "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:100",
+          "originalHost": "assets.brother.com",
+          "finalUrl": "https://assets.brother.com/transform/7a58351a-8d52-4788-8afa-1e0d6e12bd3b/14804_DCPL2540DW_front-20210120-png?io=transform:fit,width:100",
+          "finalHost": "assets.brother.com",
+          "httpStatus": 200,
+          "declaredContentType": "image/avif",
+          "detectedFileType": null,
+          "byteCount": 4803,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 480,
+          "reason": "Unsupported or corrupt image format: heif.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        },
+        {
+          "provider": "PAGE_IMAGE",
+          "originalUrl": "https://assets.brother.com/transform/6ca147e9-c035-4431-ba82-be74af8ca7ea/17433_multifuncional_laser_monocromatica_dcpl2540dw_00-png?io=transform:fit,width:100",
+          "originalHost": "assets.brother.com",
+          "finalUrl": "https://assets.brother.com/transform/6ca147e9-c035-4431-ba82-be74af8ca7ea/17433_multifuncional_laser_monocromatica_dcpl2540dw_00-png?io=transform:fit,width:100",
+          "finalHost": "assets.brother.com",
+          "httpStatus": 200,
+          "declaredContentType": "image/avif",
+          "detectedFileType": null,
+          "byteCount": 4236,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 480,
+          "reason": "Unsupported or corrupt image format: heif.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        },
+        {
+          "provider": "PAGE_IMAGE",
+          "originalUrl": "https://assets.brother.com/transform/914a5ac6-8997-43fb-aeb0-1d6f1bf18036/3969_DCPL2540DW_left-png?io=transform:fit,width:100",
+          "originalHost": "assets.brother.com",
+          "finalUrl": "https://assets.brother.com/transform/914a5ac6-8997-43fb-aeb0-1d6f1bf18036/3969_DCPL2540DW_left-png?io=transform:fit,width:100",
+          "finalHost": "assets.brother.com",
+          "httpStatus": 200,
+          "declaredContentType": "image/avif",
+          "detectedFileType": null,
+          "byteCount": 4968,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 480,
+          "reason": "Unsupported or corrupt image format: heif.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        },
+        {
+          "provider": "PAGE_IMAGE",
+          "originalUrl": "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+          "originalHost": "assets.brother.com",
+          "finalUrl": "https://assets.brother.com/transform/6028890b-3d30-4a8f-b5c4-5a2cef869da5/17434_multifuncional_laser_monocromatica_dcpl2540dw_01-png?io=transform:fit,width:100",
+          "finalHost": "assets.brother.com",
+          "httpStatus": 200,
+          "declaredContentType": "image/avif",
+          "detectedFileType": null,
+          "byteCount": 4302,
+          "originalWidth": null,
+          "originalHeight": null,
+          "outputWidth": null,
+          "outputHeight": null,
+          "candidateScore": 480,
+          "reason": "Unsupported or corrupt image format: heif.",
+          "sharpResult": null,
+          "supabaseUploadResult": null,
+          "state": "IMAGE_INVALID"
+        }
+      ]
+    }
+  ],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T12-00-03-078Z.json"
+}

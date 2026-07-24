@@ -98,6 +98,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               className={cn("rounded-lg border p-4 shadow-lg backdrop-blur", toneByType[toast.type])}
+              role={toast.type === "error" ? "alert" : "status"}
+              aria-live={toast.type === "error" ? "assertive" : "polite"}
             >
               <div className="flex items-start gap-3">
                 <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", toast.type === "loading" ? "animate-spin" : "")} />

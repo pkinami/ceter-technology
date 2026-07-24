@@ -1,7 +1,12 @@
 import { unstable_cache } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/server-logging";
 import type { Product } from "@/types";
+
+type ProductFindManyArgs = NonNullable<Parameters<typeof prisma.product.findMany>[0]>;
+type ProductWhereInput = NonNullable<ProductFindManyArgs["where"]>;
+type ProductOrderByInput = Prisma.ProductOrderByWithRelationInput;
 
 const publicProductInclude = {
   category: {
@@ -18,9 +23,7 @@ const publicProductInclude = {
 function getPublicProductRows(limit?: number) {
   return prisma.product.findMany({
     where: {
-      status: {
-        in: ["ACTIVE", "OUT_OF_STOCK"],
-      },
+      status: "PUBLISHED",
     },
     include: publicProductInclude,
     orderBy: { createdAt: "desc" },
@@ -51,6 +54,31 @@ export type CatalogueCategory = {
   productCount: number;
 };
 
+export type NavigationCategory = CatalogueCategory & {
+  children: CatalogueCategory[];
+};
+
+export type CatalogueSearchParams = {
+  q?: string;
+  category?: string;
+  brand?: string;
+  stock?: "available" | "out";
+  type?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: "newest" | "price-low" | "price-high" | "name";
+  page?: number;
+  pageSize?: number;
+};
+
+export type CataloguePageResult = {
+  products: Product[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+};
+
 function stringifySpecs(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
@@ -64,7 +92,7 @@ function stringifySpecs(value: unknown): Record<string, string> {
 }
 
 function stockLabel(product: ProductWithRelations): Product["availability"] {
-  if (product.status === "OUT_OF_STOCK" || product.stock <= 0) {
+  if (product.stock <= 0) {
     return "Out of stock";
   }
 
@@ -88,6 +116,7 @@ export function mapProduct(product: ProductWithRelations): Product {
     name: product.name,
     brand: product.brand,
     description: product.description,
+    sku: product.sku,
     price: Number(product.price),
     discountPrice: product.discountPrice ? Number(product.discountPrice) : null,
     category,
@@ -126,9 +155,7 @@ export const getProductBySlug = unstable_cache(async (slug: string) => {
     prisma.product.findFirst({
       where: {
         slug,
-        status: {
-          in: ["ACTIVE", "OUT_OF_STOCK"],
-        },
+        status: "PUBLISHED",
       },
       include: publicProductInclude,
     }),
@@ -153,7 +180,7 @@ export async function getRelatedProducts(product: Product, limit = 4) {
     prisma.product.findMany({
       where: {
         id: { not: product.id },
-        status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
+        status: "PUBLISHED",
         OR: [
           { categoryId: source.categoryId },
           ...(source.brand ? [{ brand: { equals: source.brand, mode: "insensitive" as const } }] : []),
@@ -178,7 +205,7 @@ export const getCatalogueCategories = unstable_cache(async (): Promise<Catalogue
             products: {
               where: {
                 status: {
-                  in: ["ACTIVE", "OUT_OF_STOCK"],
+                  equals: "PUBLISHED",
                 },
               },
             },
@@ -203,7 +230,7 @@ export const getCatalogueBrands = unstable_cache(async () => {
     prisma.product.findMany({
       where: {
         status: {
-          in: ["ACTIVE", "OUT_OF_STOCK"],
+          equals: "PUBLISHED",
         },
         NOT: { brand: "" },
       },
@@ -215,3 +242,165 @@ export const getCatalogueBrands = unstable_cache(async () => {
 
   return brands.map((product) => product.brand).filter(Boolean);
 }, ["catalogue-brands"], { tags: ["products", "catalogue"], revalidate: 600 });
+
+export async function getNavigationCategories(): Promise<NavigationCategory[]> {
+  const categories = await getCatalogueCategories();
+  const parents = categories
+    .filter((category) => !category.parentName && category.productCount > 0)
+    .map((category) => ({
+      ...category,
+      children: categories
+        .filter((item) => item.parentName === category.name && item.productCount > 0)
+        .sort((a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name)),
+    }))
+    .sort((a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name));
+
+  const childOnly = categories
+    .filter(
+      (category) =>
+        category.parentName &&
+        category.productCount > 0 &&
+        !parents.some((parent) => parent.name === category.parentName),
+    )
+    .map((category) => ({ ...category, children: [] }));
+
+  return [...parents, ...childOnly].slice(0, 14);
+}
+
+function cleanSearchTerm(value?: string) {
+  return value?.trim().replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ") ?? "";
+}
+
+function normalizeNumber(value?: number) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
+function catalogueWhere(params: CatalogueSearchParams): ProductWhereInput {
+  const query = cleanSearchTerm(params.q);
+  const minPrice = normalizeNumber(params.minPrice);
+  const maxPrice = normalizeNumber(params.maxPrice);
+  const and: ProductWhereInput[] = [];
+
+  if (params.type && params.type !== "All") {
+    and.push({
+      OR: [
+        { name: { contains: params.type, mode: "insensitive" as const } },
+        { description: { contains: params.type, mode: "insensitive" as const } },
+        { category: { name: { contains: params.type, mode: "insensitive" as const } } },
+      ],
+    });
+  }
+
+  if (params.stock === "out") {
+    and.push({ stock: { lte: 0 } });
+  }
+
+  if (query) {
+    and.push({
+      OR: [
+        { name: { contains: query, mode: "insensitive" as const } },
+        { brand: { contains: query, mode: "insensitive" as const } },
+        { sku: { contains: query, mode: "insensitive" as const } },
+        { description: { contains: query, mode: "insensitive" as const } },
+        { category: { name: { contains: query, mode: "insensitive" as const } } },
+        { category: { parent: { name: { contains: query, mode: "insensitive" as const } } } },
+      ],
+    });
+  }
+
+  return {
+    status: "PUBLISHED",
+    ...(and.length ? { AND: and } : {}),
+    ...(params.brand && params.brand !== "All"
+      ? { brand: { equals: params.brand, mode: "insensitive" as const } }
+      : {}),
+    ...(params.category && params.category !== "All"
+      ? {
+          category: {
+            OR: [
+              { name: { equals: params.category, mode: "insensitive" as const } },
+              { slug: { equals: params.category, mode: "insensitive" as const } },
+              { parent: { name: { equals: params.category, mode: "insensitive" as const } } },
+              { parent: { slug: { equals: params.category, mode: "insensitive" as const } } },
+            ],
+          },
+        }
+      : {}),
+    ...(params.stock === "available" ? { stock: { gt: 0 } } : {}),
+    ...(minPrice !== undefined || maxPrice !== undefined
+      ? {
+          price: {
+            ...(minPrice !== undefined ? { gte: minPrice } : {}),
+            ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+function catalogueOrder(sort: CatalogueSearchParams["sort"]): ProductOrderByInput {
+  if (sort === "price-low") return { price: "asc" };
+  if (sort === "price-high") return { price: "desc" };
+  if (sort === "name") return { name: "asc" };
+
+  return { createdAt: "desc" };
+}
+
+export async function getCataloguePage(params: CatalogueSearchParams): Promise<CataloguePageResult> {
+  const pageSize = Math.min(Math.max(params.pageSize ?? 24, 8), 48);
+  const page = Math.max(params.page ?? 1, 1);
+  const where = catalogueWhere(params);
+
+  const total = await withCatalogueLogging("getCataloguePage.count", params, () =>
+    prisma.product.count({ where }),
+  );
+  const products = await withCatalogueLogging("getCataloguePage.products", params, () =>
+    prisma.product.findMany({
+      where,
+      include: publicProductInclude,
+      orderBy: [catalogueOrder(params.sort), { id: "asc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  );
+
+  const pageCount = Math.max(Math.ceil(total / pageSize), 1);
+
+  return {
+    products: products.map(mapProduct),
+    total,
+    page: Math.min(page, pageCount),
+    pageSize,
+    pageCount,
+  };
+}
+
+export async function getCatalogueFacets(params: CatalogueSearchParams = {}) {
+  const where = catalogueWhere({ ...params, brand: undefined });
+  const [categories, brands, price] = await withCatalogueLogging("getCatalogueFacets", params, () =>
+    Promise.all([
+      getCatalogueCategories(),
+      prisma.product.groupBy({
+        by: ["brand"],
+        where: { ...where, NOT: { brand: "" } },
+        _count: { _all: true },
+        orderBy: { brand: "asc" },
+      }),
+      prisma.product.aggregate({
+        where,
+        _min: { price: true },
+        _max: { price: true },
+      }),
+    ]),
+  );
+
+  return {
+    categories,
+    brands: brands.map((brand) => ({
+      name: brand.brand,
+      productCount: brand._count._all,
+    })),
+    minPrice: price._min.price ? Number(price._min.price) : 0,
+    maxPrice: price._max.price ? Number(price._max.price) : 0,
+  };
+}

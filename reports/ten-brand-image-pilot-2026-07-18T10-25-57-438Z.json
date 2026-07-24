@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-07-18T10:26:01.845Z",
+  "state": "PILOT_SETUP_FAILED",
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_FAILED",
+    "failedComponent": "Icecat connection",
+    "failureReason": "Icecat returned HTTP 404.",
+    "checks": []
+  },
+  "rows": [],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T10-25-57-438Z.json"
+}

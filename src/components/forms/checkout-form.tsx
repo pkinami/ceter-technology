@@ -6,15 +6,18 @@ import {
   CheckCircle2,
   CreditCard,
   Landmark,
+  Loader2,
   PackageCheck,
   Smartphone,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { createCheckoutOrder } from "@/app/checkout/actions";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import { sanitizeOperationMessage } from "@/lib/feedback";
 import { useCartStore } from "@/store/cart-store";
 
 const schema = z.object({
@@ -44,6 +47,8 @@ const paymentOptions: PaymentOption[] = [
 export function CheckoutForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [submitting, setSubmitting] = useState(false);
+  const { showToast, updateToast } = useToast();
   const { items, clearCart } = useCartStore();
   const {
     register,
@@ -59,56 +64,68 @@ export function CheckoutForm() {
   const selectedPayment = useWatch({ control, name: "paymentMethod" });
 
   function onSubmit(values: CheckoutFormData) {
+    if (submitting || isPending) return;
     if (items.length === 0) {
       setError("root", { message: "Add products to your cart before checkout." });
       return;
     }
 
+    setSubmitting(true);
+    const toastId = showToast({ type: "loading", title: "Sending request", message: "Placing your order." });
     startTransition(async () => {
-      void fetch("/api/analytics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventType: "CHECKOUT_STARTED",
-          metadata: {
-            itemCount: items.length,
-            paymentMethod: values.paymentMethod,
-          },
-        }),
-      });
-
-      const result = await createCheckoutOrder({
-        ...values,
-        items: items.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity,
-        })),
-      });
-
-      if (!result.ok) {
-        setError("root", {
-          message: result.message ?? "Unable to create the order.",
+      try {
+        void fetch("/api/analytics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType: "CHECKOUT_STARTED",
+            metadata: {
+              itemCount: items.length,
+              paymentMethod: values.paymentMethod,
+            },
+          }),
         });
 
-        if (result.fieldErrors) {
-          for (const [key, messages] of Object.entries(result.fieldErrors)) {
-            if (messages?.[0] && key in values) {
-              setError(key as keyof CheckoutFormData, { message: messages[0] });
+        const result = await createCheckoutOrder({
+          ...values,
+          items: items.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+          })),
+        });
+
+        if (!result.ok) {
+          const message = sanitizeOperationMessage(result.message, "Unable to create the order.");
+          setError("root", { message });
+
+          if (result.fieldErrors) {
+            for (const [key, messages] of Object.entries(result.fieldErrors)) {
+              if (messages?.[0] && key in values) {
+                setError(key as keyof CheckoutFormData, { message: sanitizeOperationMessage(messages[0], "Check this field.") });
+              }
             }
           }
+
+          updateToast(toastId, { type: "error", title: "Order failed", message });
+          setFocus("customerName");
+          return;
         }
 
-        setFocus("customerName");
-        return;
+        clearCart();
+        updateToast(toastId, { type: "success", title: "Order received", message: "Redirecting to confirmation." });
+        router.push(`/order-confirmation/${result.orderId}`);
+      } catch (error) {
+        const message = sanitizeOperationMessage(error, "Unable to create the order.");
+        setError("root", { message });
+        updateToast(toastId, { type: "error", title: "Order failed", message });
+      } finally {
+        setSubmitting(false);
       }
-
-      clearCart();
-      router.push(`/order-confirmation/${result.orderId}`);
     });
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} aria-busy={submitting || isPending} className="grid gap-5">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold">
           Full name
@@ -117,7 +134,7 @@ export function CheckoutForm() {
             className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
           />
           {errors.customerName ? (
-            <span className="text-xs text-red-600">{errors.customerName.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.customerName.message}</span>
           ) : null}
         </label>
         <label className="grid gap-2 text-sm font-semibold">
@@ -128,7 +145,7 @@ export function CheckoutForm() {
             className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
           />
           {errors.customerPhone ? (
-            <span className="text-xs text-red-600">{errors.customerPhone.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.customerPhone.message}</span>
           ) : null}
         </label>
       </div>
@@ -140,7 +157,7 @@ export function CheckoutForm() {
           className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
         />
         {errors.customerEmail ? (
-          <span className="text-xs text-red-600">{errors.customerEmail.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.customerEmail.message}</span>
         ) : null}
       </label>
       <label className="grid gap-2 text-sm font-semibold">
@@ -151,7 +168,7 @@ export function CheckoutForm() {
           className="rounded-md border border-slate-200 px-3 py-3 outline-none focus:border-orange-500"
         />
         {errors.deliveryAddress ? (
-          <span className="text-xs text-red-600">{errors.deliveryAddress.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.deliveryAddress.message}</span>
         ) : null}
       </label>
       <div className="grid gap-4 md:grid-cols-2">
@@ -162,7 +179,7 @@ export function CheckoutForm() {
             className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
           />
           {errors.city ? (
-            <span className="text-xs text-red-600">{errors.city.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.city.message}</span>
           ) : null}
         </label>
         <label className="grid gap-2 text-sm font-semibold">
@@ -172,7 +189,7 @@ export function CheckoutForm() {
             className="h-12 rounded-md border border-slate-200 px-3 outline-none focus:border-orange-500"
           />
           {errors.country ? (
-            <span className="text-xs text-red-600">{errors.country.message}</span>
+          <span className="text-xs text-red-600" role="alert">{errors.country.message}</span>
           ) : null}
         </label>
       </div>
@@ -200,19 +217,20 @@ export function CheckoutForm() {
         ))}
       </fieldset>
       {errors.root ? (
-        <p className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+        <p className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700" role="alert" aria-live="assertive">
           <AlertCircle className="h-4 w-4" />
           {errors.root.message}
         </p>
       ) : null}
       {isSubmitSuccessful && !errors.root ? (
-        <p className="flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+        <p className="flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700" role="status" aria-live="polite">
           <CheckCircle2 className="h-4 w-4" />
           Order received. Redirecting to confirmation.
         </p>
       ) : null}
-      <Button type="submit" className="w-full md:w-fit" disabled={isPending}>
-        {isPending ? "Placing order..." : "Place Order"}
+      <Button type="submit" className="w-full md:w-fit" disabled={submitting || isPending}>
+        {submitting || isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        {submitting || isPending ? "Sending request" : "Place Order"}
       </Button>
     </form>
   );

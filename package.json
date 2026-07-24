@@ -11,7 +11,10 @@
     "seed": "node prisma/seed.mjs",
     "setup:admin": "node scripts/create-admin.mjs",
     "audit:prod": "node scripts/production-runtime-audit.mjs",
-    "setup:prod": "node scripts/production-setup.mjs"
+    "setup:prod": "node scripts/production-setup.mjs",
+    "test:imports": "node --experimental-specifier-resolution=node --experimental-strip-types --experimental-transform-types scripts/catalogue-import.test.mjs",
+    "test:catalogue": "node --experimental-specifier-resolution=node --experimental-strip-types --experimental-transform-types scripts/catalogue-import.test.mjs",
+    "catalogue:create-product-pilot": "node scripts/create-product-import-pilot.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -20,7 +23,6 @@
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1",
     "@vercel/speed-insights": "^2.0.0",
-    "cloudinary": "latest",
     "clsx": "^2.1.1",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
@@ -29,7 +31,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.81.0",
-    "serpapi": "latest",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^3.6.0",
     "xlsx": "^0.18.5",
     "zod": "^4.4.3",

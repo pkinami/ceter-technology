@@ -1,0 +1,56 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.16.0
+2 info using node@v24.18.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\ceter-technology\.npmrc
+5 silly config load:file:C:\Users\kinami\.npmrc
+6 silly config load:file:C:\Users\kinami\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install" "--package-lock-only" "--ignore-scripts"
+9 verbose logfile logs-max:10 dir:C:\ceter-technology\.npm-cache\_logs\2026-07-24T12_27_33_627Z-
+10 verbose logfile C:\ceter-technology\.npm-cache\_logs\2026-07-24T12_27_33_627Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2348810240 maxSize:587202560 maxEntrySize:293601280
+13 silly idealTree buildDeps
+14 http cache https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz 2ms (cache hit)
+15 silly tarball no local data for https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz. Extracting by manifest.
+16 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz attempt 1 failed with EACCES
+17 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz attempt 2 failed with EACCES
+18 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz attempt 3 failed with EACCES
+19 verbose type system
+20 verbose stack FetchError: request to https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz failed, reason: 
+20 verbose stack     at ClientRequest.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+20 verbose stack     at ClientRequest.emit (node:events:509:28)
+20 verbose stack     at emitErrorEvent (node:_http_client:109:11)
+20 verbose stack     at _destroy (node:_http_client:993:9)
+20 verbose stack     at onSocketNT (node:_http_client:1014:5)
+20 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+21 error code EACCES
+22 error errno EACCES
+23 error FetchError: request to https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.2.tgz failed, reason: 
+23 error     at ClientRequest.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+23 error     at ClientRequest.emit (node:events:509:28)
+23 error     at emitErrorEvent (node:_http_client:109:11)
+23 error     at _destroy (node:_http_client:993:9)
+23 error     at onSocketNT (node:_http_client:1014:5)
+23 error     at process.processTicksAndRejections (node:internal/process/task_queues:91:21) {
+23 error   code: 'EACCES',
+23 error   errno: 'EACCES',
+23 error   type: 'system'
+23 error }
+24 error
+24 error The operation was rejected by your operating system.
+24 error It's possible that the file was already in use (by a text editor or antivirus), or that you lack permissions to access it.
+24 error
+24 error If you believe this might be a permissions issue, please double-check the permissions of the file and its containing directories, or try running the command again as root/Administrator.
+25 silly unfinished npm timer reify 1784896055487
+26 silly unfinished npm timer reify:loadTrees 1784896055487
+27 silly unfinished npm timer idealTree:buildDeps 1784896056198
+28 silly unfinished npm timer idealTree:node_modules/@tailwindcss/oxide-wasm32-wasi 1784896056201
+29 verbose cwd C:\ceter-technology
+30 verbose os Windows_NT 10.0.18363
+31 verbose node v24.18.0
+32 verbose npm  v11.16.0
+33 verbose exit 1
+34 verbose code 1
+35 error A complete log of this run can be found in: C:\ceter-technology\.npm-cache\_logs\2026-07-24T12_27_33_627Z-debug-0.log

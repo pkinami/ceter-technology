@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Home, Search } from "lucide-react";
 import { ProductFilters } from "@/components/product/product-filters";
+import { SearchSubmitButton } from "@/components/forms/search-submit-button";
 import {
-  getCatalogueBrands,
+  type CatalogueSearchParams,
   getCatalogueCategories,
-  getPublicProducts,
+  getCatalogueFacets,
+  getCataloguePage,
 } from "@/lib/catalog";
 
 export const metadata: Metadata = {
@@ -20,16 +22,55 @@ type Props = {
   searchParams: Promise<{
     q?: string;
     category?: string;
+    brand?: string;
+    stock?: string;
+    type?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sort?: string;
+    page?: string;
+    view?: string;
   }>;
 };
 
 export default async function ProductsPage({ searchParams }: Props) {
-  const { q, category } = await searchParams;
-  const [products, categories, brands] = await Promise.all([
-    getPublicProducts(),
+  const params = await searchParams;
+  const stockFilter: CatalogueSearchParams["stock"] =
+    params.stock === "available" || params.stock === "out" ? params.stock : undefined;
+  const sortFilter: CatalogueSearchParams["sort"] =
+    params.sort === "price-low" || params.sort === "price-high" || params.sort === "name"
+      ? params.sort
+      : "newest";
+  const filters = {
+    q: params.q,
+    category: params.category,
+    brand: params.brand,
+    stock: stockFilter,
+    type: params.type,
+    minPrice: params.minPrice,
+    maxPrice: params.maxPrice,
+    sort: sortFilter,
+    page: params.page,
+    view: params.view === "list" ? "list" : "grid",
+  };
+  const query: CatalogueSearchParams = {
+    q: filters.q,
+    category: filters.category,
+    brand: filters.brand,
+    stock: filters.stock,
+    type: filters.type,
+    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+    sort: filters.sort,
+    page: filters.page ? Number(filters.page) : 1,
+    pageSize: 24,
+  };
+  const [result, categories, facets] = await Promise.all([
+    getCataloguePage(query),
     getCatalogueCategories(),
-    getCatalogueBrands(),
+    getCatalogueFacets(query),
   ]);
+  const currentCategory = categories.find((item) => item.slug === filters.category || item.name === filters.category);
   const categoryGroups = categories
     .filter((category) => !category.parentName)
     .map((category) => ({
@@ -38,9 +79,6 @@ export default async function ProductsPage({ searchParams }: Props) {
         .filter((item) => item.parentName === category.name)
         .map((item) => item.name),
     }));
-  const filterCategories = Array.from(
-    new Set(categories.flatMap((category) => [category.parentName, category.name]).filter(Boolean)),
-  ) as string[];
 
   return (
     <div className="bg-slate-50">
@@ -63,13 +101,11 @@ export default async function ProductsPage({ searchParams }: Props) {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
               <input
                 name="q"
-                defaultValue={q ?? ""}
+                defaultValue={filters.q ?? ""}
                 placeholder="Try HP 107A toner, Epson EcoTank, Dell laptop, router..."
                 className="h-14 w-full rounded-md border border-white/10 bg-white pl-12 pr-32 text-sm font-semibold text-slate-950"
               />
-              <button className="absolute right-2 top-1/2 h-10 -translate-y-1/2 rounded-md bg-orange-500 px-4 text-sm font-black text-white hover:bg-orange-600">
-                Search
-              </button>
+              <SearchSubmitButton className="absolute right-2 top-1/2 h-10 -translate-y-1/2 rounded-md bg-orange-500 px-4 text-white hover:bg-orange-600" />
             </label>
           </form>
         </div>
@@ -83,7 +119,21 @@ export default async function ProductsPage({ searchParams }: Props) {
           </Link>
           <ChevronRight className="h-4 w-4" />
           <span className="text-slate-900">Products</span>
+          {currentCategory ? (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-slate-900">{currentCategory.name}</span>
+            </>
+          ) : null}
         </nav>
+        <div className="mb-6">
+          <h2 className="text-3xl font-black text-slate-950">
+            {currentCategory ? currentCategory.name : filters.q ? `Search results for "${filters.q}"` : "All products"}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Browse the live CETER catalogue with prices, stock state, brand filters, product types, product counts, and shareable URL filters.
+          </p>
+        </div>
         {categoryGroups.length > 0 ? (
           <div className="mb-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-black uppercase text-slate-500">Live database categories</p>
@@ -97,11 +147,12 @@ export default async function ProductsPage({ searchParams }: Props) {
           </div>
         ) : null}
         <ProductFilters
-          products={products}
-          categories={filterCategories}
-          brands={brands}
-          initialQuery={q ?? ""}
-          initialCategory={category ?? "All"}
+          result={result}
+          categories={categories}
+          brands={facets.brands}
+          filters={filters}
+          minPrice={facets.minPrice}
+          maxPrice={facets.maxPrice}
         />
       </section>
     </div>

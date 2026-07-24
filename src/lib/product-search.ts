@@ -36,7 +36,7 @@ export async function searchProducts(filters: ProductSearchFilters) {
   const query = cleanQuery(filters.query);
   const limit = Math.min(Math.max(filters.limit ?? 36, 1), 100);
   const where: ProductWhereInput = {
-    status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
+    status: "PUBLISHED",
     ...(filters.brand && filters.brand !== "All" ? { brand: { equals: filters.brand, mode: "insensitive" } } : {}),
     ...(filters.minPrice || filters.maxPrice
       ? {
@@ -46,8 +46,8 @@ export async function searchProducts(filters: ProductSearchFilters) {
           },
         }
       : {}),
-    ...(filters.availability === "available" ? { stock: { gt: 0 }, status: "ACTIVE" } : {}),
-    ...(filters.availability === "out" ? { OR: [{ stock: { lte: 0 } }, { status: "OUT_OF_STOCK" }] } : {}),
+    ...(filters.availability === "available" ? { stock: { gt: 0 } } : {}),
+    ...(filters.availability === "out" ? { stock: { lte: 0 } } : {}),
     ...(filters.category && filters.category !== "All"
       ? {
           category: {
@@ -76,7 +76,7 @@ export async function searchProducts(filters: ProductSearchFilters) {
       SELECT p.id
       FROM "Product" p
       JOIN "Category" c ON c.id = p."categoryId"
-      WHERE p.status IN ('ACTIVE', 'OUT_OF_STOCK')
+      WHERE p.status = 'PUBLISHED'
         AND to_tsvector('english', concat_ws(' ', p.name, p.brand, p.description, c.name))
           @@ websearch_to_tsquery('english', ${query})
       ORDER BY ts_rank_cd(

@@ -80,7 +80,7 @@ export async function createCheckoutOrder(
       const products = await tx.product.findMany({
         where: {
           id: { in: productIds },
-          status: { in: ["ACTIVE", "OUT_OF_STOCK"] },
+          status: "PUBLISHED",
         },
         select: {
           id: true,
@@ -99,7 +99,7 @@ export async function createCheckoutOrder(
       for (const product of products) {
         const quantity = quantities.get(product.id) ?? 0;
 
-        if (product.status === "OUT_OF_STOCK" || product.stock < quantity) {
+        if (product.stock < quantity) {
           throw new Error(`${product.name} has only ${product.stock} item(s) available.`);
         }
       }
@@ -153,20 +153,13 @@ export async function createCheckoutOrder(
 
       for (const product of products) {
         const quantity = quantities.get(product.id) ?? 0;
-        const updated = await tx.product.update({
+        await tx.product.update({
           where: { id: product.id },
           data: {
             stock: { decrement: quantity },
           },
           select: { stock: true },
         });
-
-        if (updated.stock <= 0) {
-          await tx.product.update({
-            where: { id: product.id },
-            data: { status: "OUT_OF_STOCK" },
-          });
-        }
 
         await tx.stockMovement.create({
           data: {

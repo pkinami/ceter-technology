@@ -1,0 +1,1144 @@
+codex exec 'Console Error
+
+
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
++
+Client
+-
+Server
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname='/' notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <LoadingBoundaryProvider loading={[...]}>
+                      <SegmentViewNode type='layout' pagePath='layout.tsx'>
+                        <SegmentTrieNode>
+                        <link>
+                        <script>
+                        <script>
+                        <script>
+                        <script>
+                        <RootLayout>
+                          <html lang='en' className='h-full ant...'>
+                            <body
+                              className='flex min-h-full flex-col bg-white text-slate-900'
+-                             __processed_505f006b-9c25-419f-bd15-c25752e27f64__='true'
+                            >
+                  ...
+src\app\layout.tsx (51:7) @ RootLayout
+
+
+  49 |   return (
+  50 |     <html lang='en' className='h-full antialiased'>
+> 51 |       <body className='flex min-h-full flex-col bg-white text-slate-900'>
+     |       ^
+  52 |         <ToastProvider>
+  53 |           <Suspense fallback={null}>
+  54 |             <RouteProgress />
+Call Stack
+18
+
+Show 16 ignore-listed frame(s)
+body
+<anonymous>
+RootLayout
+src\app\layout.tsx (51:7)
+
+
+Console Error
+
+
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
++
+Client
+-
+Server
+  ...
+    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>
+      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+        <ErrorBoundary errorComponent={function Error} errorStyles={{...}} errorScripts={[...]}>
+          <ErrorBoundaryHandler pathname='/' errorComponent={function Error} errorStyles={{...}} errorScripts={[...]}>
+            <LoadingBoundary name='/' loading={[...]}>
+              <Suspense name='/' fallback={<Fragment>}>
+                <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+                  <HTTPAccessFallbackErrorBoundary pathname='/' notFound={{...}} forbidden={undefined} ...>
+                    <RedirectBoundary>
+                      <RedirectErrorBoundary router={{...}}>
+                        <InnerLayoutRouter url='/' tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>
+                          <SegmentViewNode type='page' pagePath='page.tsx'>
+                            <SegmentTrieNode>
+                            <Home>
+                              <div
+                                className='bg-slate-50'
+-                               bis_skin_checked='1'
+                              >
+                                <section className='relative o...'>
+                                  <div
+                                    className='absolute inset-0'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <img>
+                                    <ImagePreload>
+                                    <div
+                                      className='absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-...'
+-                                     bis_skin_checked='1'
+                                    >
+                                  <div
+                                    className='relative mx-auto grid min-h-[620px] max-w-7xl content-center px-4 py-16...'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='max-w-3xl'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <p>
+                                      <h1>
+                                      <p>
+                                      <form>
+                                      <div
+                                        className='mt-5 flex flex-wrap gap-2'
+-                                       bis_skin_checked='1'
+                                      >
+                                <section className='border-b b...'>
+                                  <div
+                                    className='mx-auto grid max-w-7xl gap-3 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4...'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-black...'
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-black...'
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-black...'
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-black...'
+-                                     bis_skin_checked='1'
+                                    >
+                                <section className='mx-auto ma...'>
+                                  <div
+                                    className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/products?...' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                    <LinkComponent>
+                                      <LinkComponent href='/services' className='group roun...'>
+                                        <a className='group roun...' ref={function} onClick={function onClick} ...>
+                                          <div
+                                            className='flex items-center justify-between'
+-                                           bis_skin_checked='1'
+                                          >
+                                          ...
+                                <section className='bg-white p...'>
+                                  <div
+                                    className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <div
+-                                       bis_skin_checked='1'
+                                      >
+                                      ...
+                                    <div
+                                      className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Generic Maintenance Contracts MC4P65'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Generic Maintenance Contracts MCVVEN'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Generic Maintenance Contracts MC6XT6'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Generic Maintenance Contracts MC7BD3'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                <section className='py-12'>
+                                  <div
+                                    className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='grid gap-5 lg:grid-cols-3'
+-                                     bis_skin_checked='1'
+                                    >
+                                <section className='bg-white p...'>
+                                  <div
+                                    className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <div
+-                                       bis_skin_checked='1'
+                                      >
+                                      ...
+                                    <div
+                                      className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='D-Link Network Accessories NATUD6'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='D-Link Network Accessories NA0N0X'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='TP-Link CAT6 CDSY9'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='TP-Link CAT6 C92VU'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                <section className='bg-white p...'>
+                                  <div
+                                    className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <div
+-                                       bis_skin_checked='1'
+                                      >
+                                      ...
+                                    <div
+                                      className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='APC Desktop UPS DUCNLL'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='CyberPower Desktop UPS DUE777'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='APC Desktop UPS DUN10R'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Eaton Desktop UPS DUTNQY'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                <section className='bg-white p...'>
+                                  <div
+                                    className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <div
+-                                       bis_skin_checked='1'
+                                      >
+                                      ...
+                                    <div
+                                      className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'
+-                                     bis_skin_checked='1'
+                                    >
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Microsoft Cloud Services CSUPSJ'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='ZKTeco Bullet Cameras BCMTPZ'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Dahua Bullet Cameras BCGOM3'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                      <ProductCard>
+                                        <article className='group flex...'>
+                                          <ProductVisual>
+                                            <div
+                                              className='relative flex aspect-[4/3] items-center justify-center overfl...'
+                                              aria-label='Bosch Bullet Cameras BC73IF'
+                                              role='img'
+-                                             bis_skin_checked='1'
+                                            >
+                                          <div
+                                            className='flex flex-1 flex-col gap-4 p-5'
+-                                           bis_skin_checked='1'
+                                          >
+                                            <div
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+                                                className='flex flex-wrap items-center gap-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <h3>
+                                              <p>
+                                              <dl className='mt-3 grid ...'>
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                                <div
+                                                  className='flex justify-between gap-3'
+-                                                 bis_skin_checked='1'
+                                                >
+                                            <div
+                                              className='mt-auto flex flex-col gap-3'
+-                                             bis_skin_checked='1'
+                                            >
+                                              <div
+-                                               bis_skin_checked='1'
+                                              >
+                                              <span>
+                                              <div
+                                                className='grid grid-cols-2 gap-2 text-xs font-bold text-slate-500'
+-                                               bis_skin_checked='1'
+                                              >
+                                              <div
+                                                className='grid grid-cols-1 gap-2 sm:grid-cols-2'
+-                                               bis_skin_checked='1'
+                                              >
+                                              ...
+                                <section className='bg-slate-9...'>
+                                  <div
+                                    className='mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg...'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='grid gap-3 sm:grid-cols-2'
+-                                     bis_skin_checked='1'
+                                    >
+                                <section id='request-quote' className='bg-white p...'>
+                                  <div
+                                    className='mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg...'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+-                                     bis_skin_checked='1'
+                                    >
+                                      <p>
+                                      <h2>
+                                      <p>
+                                      <div
+                                        className='mt-6 grid gap-3'
+-                                       bis_skin_checked='1'
+                                      >
+                                        <div
+                                          className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-b...'
+-                                         bis_skin_checked='1'
+                                        >
+                                        <div
+                                          className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-b...'
+-                                         bis_skin_checked='1'
+                                        >
+                                        <div
+                                          className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-b...'
+-                                         bis_skin_checked='1'
+                                        >
+                                        <div
+                                          className='flex items-center gap-3 rounded-md bg-slate-50 p-4 text-sm font-b...'
+-                                         bis_skin_checked='1'
+                                        >
+                                    <form action={function submitQuoteRequest} className='grid gap-4...'>
+                                      <div
+                                        className='grid gap-4 sm:grid-cols-2'
+-                                       bis_skin_checked='1'
+                                      >
+                                      ...
+                                <section className='border-y b...'>
+                                  <div
+                                    className='mx-auto grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-3 lg:px-8'
+-                                   bis_skin_checked='1'
+                                  >
+                                    <div
+                                      className='flex items-center gap-3 rounded-lg bg-slate-50 p-5 font-black text-sl...'
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='flex items-center gap-3 rounded-lg bg-slate-50 p-5 font-black text-sl...'
+-                                     bis_skin_checked='1'
+                                    >
+                                    <div
+                                      className='flex items-center gap-3 rounded-lg bg-slate-50 p-5 font-black text-sl...'
+-                                     bis_skin_checked='1'
+                                    >
+                          ...
+                        ...
+        ...
+src\app\page.tsx (112:11) @ Home
+
+
+  110 |         <div className='absolute inset-0'>
+  111 |           <Image src={hero.imageUrl ?? '/images/ceter-hero.png'} alt='' fill priority sizes='100vw' className...
+> 112 |           <div className='absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40' />
+      |           ^
+  113 |         </div>
+  114 |         <div className='relative mx-auto grid min-h-[620px] max-w-7xl content-center px-4 py-16 sm:px-6 lg:px...
+  115 |           <div className='max-w-3xl'>
+Call Stack
+18
+
+Show 16 ignore-listed frame(s)
+div
+<anonymous>
+Home
+src\app\page.tsx (112:11)'--sandbox workspace-write

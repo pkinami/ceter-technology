@@ -1,5 +1,5 @@
 import type { PoolConfig } from "pg";
-import { databaseEnv, requireFirstEnv } from "./env";
+import { databaseEnv, requireFirstEnv } from "./env.ts";
 
 function getConnectionStringWithSupabaseSsl(connectionString: string) {
   const url = new URL(connectionString);

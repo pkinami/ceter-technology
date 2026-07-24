@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-07-18T10:14:32.871Z",
+  "state": "PILOT_SETUP_FAILED",
+  "envFiles": [
+    ".env.local",
+    ".env.production",
+    ".env"
+  ],
+  "preflight": {
+    "state": "PILOT_SETUP_FAILED",
+    "failedComponent": "Icecat credentials",
+    "failureReason": "Missing environment variable. Set one of: ICECAT_USERNAME, OPEN_ICECAT_USERNAME.",
+    "checks": []
+  },
+  "rows": [],
+  "reportPath": "C:\\ceter-technology\\reports\\ten-brand-image-pilot-2026-07-18T10-14-32-853Z.json"
+}
